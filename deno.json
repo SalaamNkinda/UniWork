@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "@db/sqlite": "jsr:@db/sqlite@^0.13.0"
+  },
+  "tasks": {
+    "serve": "deno --watch --allow-all main.js",
+    "db:init": "deno --allow-all ./database/db.js",
+    "start": "deno run -A backend/server.js"
+  }
+}
