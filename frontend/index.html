@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen - Login</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-header">
+            <h1>Kitchen</h1>
+            <p>Enter your credentials to access the system</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Employee ID / Role</label>
+                <input type="text" id="username" placeholder="Enter admin, waiter, or chef" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">PIN</label>
+                <input type="password" id="password" placeholder="••••" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Login to System</button>
+        </form>
+
+        <!-- <div class="demo-hints">
+            <strong>Professor Demo:</strong> Type <code>admin</code> (Majid), <code>waiter</code> (Salaam), or <code>chef</code> (Atif) to test the routing.
+        </div> -->
+    </div>
+
+    <script>
+        // Form Routing Logic
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Stop the page from reloading
+            
+            // Get the value typed in and make it lowercase
+            const role = document.getElementById('username').value.toLowerCase().trim();
+
+            // Redirect based on the user
+            if (role === 'admin') {
+                window.location.href = '/dashboard.html'; // Majid
+            } else if (role === 'waiter') {
+                window.location.href = '/pos.html'; // Salaam
+            } else if (role === 'chef') {
+                window.location.href = '/inventory.html'; // Atif
+            } else {
+                alert('Invalid credentials. For this demo, please type admin, waiter, or chef.');
+            }
+        });
+    </script>
+
+</body>
+</html>
