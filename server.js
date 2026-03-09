@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
 });
 
 // 2. API Routes (Fetch Data)
-app.get('/api/ingredients', inventoryController.getAllIngredients);
+//app.get('/api/ingredients', inventoryController.getAllIngredients);
 
 // Start Server
 const PORT = 3000;
