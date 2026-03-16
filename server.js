@@ -32,6 +32,15 @@ app.get('/api/inventory/menu/:id/cost', inventoryController.getDishCost);
 
 app.post('/api/inventory/wastage', inventoryController.recordWastage);
 
+app.get('/api/pos/floor', posController.getFloorData);
+app.get('/api/pos/menu', posController.getMenu);
+app.post('/api/pos/verify-pin', posController.verifyPin);
+app.post('/api/pos/order', posController.placeOrder);
+
+
+app.get('/api/pos/kitchen', posController.getKitchenData);
+app.put('/api/pos/kitchen/:id/done', posController.completeOrder);
+
 // Start Server
 const PORT = 3000;
 app.listen(PORT, () => {
