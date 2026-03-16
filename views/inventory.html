@@ -2,41 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Inventory | Salaam's Grill</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Inventory | Atif's Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="bg-gray-50 font-sans">
 
-    <nav class="navbar">
-        <h1><i class="fas fa-utensils"></i> Salaam's Grill: Inventory</h1>
-        <div class="nav-links">
-            <button onclick="showSection('ingredients-section')">Ingredients</button>
-            <button onclick="showSection('recipe-section')">Recipe Builder</button>
-            <button onclick="showSection('wastage-section')" style="color: #fecaca;">Log Wastage</button>
+    <nav class="bg-blue-600 text-white p-4 shadow-lg flex justify-between items-center">
+        <h1 class="text-xl font-bold"><i class="fas fa-utensils mr-2"></i> Salaam's Grill: Inventory</h1>
+        <div class="space-x-4">
+            <button onclick="showSection('ingredients-section')" class="hover:underline">Ingredients</button>
+            <button onclick="showSection('recipe-section')" class="hover:underline">Recipe Builder</button>
+            <button onclick="showSection('wastage-section')" class="hover:underline text-red-200">Log Wastage</button>
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container mx-auto p-6">
         
-        <section id="ingredients-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2>Kitchen Stock</h2>
-                <button class="btn-primary" onclick="toggleModal('ingredient-modal')" style="background-color: var(--success-green); color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer;">
-                    <i class="fas fa-plus"></i> Add Ingredient
+        <section id="ingredients-section" class="block">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold text-gray-800">Kitchen Stock</h2>
+                <button onclick="toggleModal('ingredient-modal')" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    <i class="fas fa-plus mr-2"></i>Add Ingredient
                 </button>
             </div>
 
-            <div class="table-container">
-                <table>
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="min-w-full leading-normal">
                     <thead>
-                        <tr>
-                            <th>Ingredient</th>
-                            <th>Stock Level</th>
-                            <th>Unit Cost</th>
-                            <th>Supplier</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm">
+                            <th class="px-5 py-3 border-b text-left">Ingredient</th>
+                            <th class="px-5 py-3 border-b text-left">Stock Level</th>
+                            <th class="px-5 py-3 border-b text-left">Unit Cost</th>
+                            <th class="px-5 py-3 border-b text-left">Supplier</th>
+                            <th class="px-5 py-3 border-b text-left">Status</th>
+                            <th class="px-5 py-3 border-b text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="ingredients-table-body">
@@ -46,52 +47,127 @@
         </section>
 
         <section id="recipe-section" class="hidden">
-            <h2>Recipe Builder & Auto-Costing [cite: 15-19]</h2>
-            <div class="recipe-grid">
-                <div class="form-card">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Recipe Builder & Auto-Costing</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow">
                     <form id="recipe-form">
-                        <label>Dish Name</label>
-                        <input type="text" id="dish_name" required style="width: 100%; margin-bottom: 1rem;">
+                        <label class="block mb-2 font-bold">Dish Name</label>
+                        <input type="text" id="dish_name" class="w-full border p-2 mb-4 rounded" placeholder="e.g. Margherita Pizza" required>
                         
-                        <div style="display: flex; gap: 1rem;">
-                            <div style="flex: 1;">
-                                <label>Category</label>
-                                <select id="dish_category" style="width: 100%;">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block mb-2 font-bold">Category</label>
+                                <select id="dish_category" class="w-full border p-2 rounded">
                                     <option>Pizza</option><option>Sides</option><option>Drinks</option>
                                 </select>
                             </div>
-                            <div style="flex: 1;">
-                                <label>Price ($)</label>
-                                <input type="number" id="selling_price" step="0.01" required style="width: 100%;">
+                            <div>
+                                <label class="block mb-2 font-bold">Price ($)</label>
+                                <input type="number" id="selling_price" class="w-full border p-2 rounded" step="0.01" required>
                             </div>
                         </div>
-                        </form>
+
+                        <label class="block mb-2 font-bold text-blue-600">Link Ingredients [cite: 16, 17]</label>
+                        <div id="recipe-ingredients-list" class="space-y-2 mb-4">
+                            </div>
+                        <button type="button" onclick="addIngredientRow()" class="text-sm text-blue-500 font-bold">+ Add Ingredient to Recipe</button>
+                        <hr class="my-6">
+                        <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700">Save Menu Item</button>
+                    </form>
                 </div>
 
-                <div class="form-card" style="background: #eff6ff; border: 1px solid #bfdbfe;">
-                    <h3>Auto-Costing Preview</h3>
-                    <div id="cost-preview">Production Cost: $0.00</div>
-                    <div id="margin-preview">Margin: 0%</div>
+                <div class="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
+                    <h3 class="font-bold text-blue-800 mb-4 text-xl">Auto-Costing Preview</h3>
+                    <div class="flex justify-between text-lg mb-2">
+                        <span>Production Cost:</span>
+                        <span id="cost-preview" class="font-bold">$0.00</span>
+                    </div>
+                    <div class="flex justify-between text-lg border-t pt-2 border-blue-200">
+                        <span>Profit Margin:</span>
+                        <span id="margin-preview" class="font-bold text-green-600">0%</span>
+                    </div>
                 </div>
             </div>
         </section>
     </div>
 
-    <div id="ingredient-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3>Add Raw Ingredient</h3>
+    <div id="ingredient-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg w-96 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">Add Raw Ingredient</h3>
             <form id="add-ingredient-form">
-                <input type="text" id="new_name" placeholder="Name" required style="width: 100%; margin-bottom: 10px;">
-                <input type="number" id="new_stock" placeholder="Initial Stock" required style="width: 100%; margin-bottom: 10px;">
-                <input type="text" id="new_unit" placeholder="Unit (e.g. kg)" required style="width: 100%; margin-bottom: 10px;">
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" onclick="toggleModal('ingredient-modal')">Cancel</button>
-                    <button type="submit" style="background: var(--success-green); color: white;">Save</button>
+                <input type="text" id="new_name" placeholder="Name (e.g. Cheese)" class="w-full border p-2 mb-3 rounded" required>
+                <input type="number" id="new_stock" placeholder="Initial Stock" class="w-full border p-2 mb-3 rounded" required>
+                <input type="text" id="new_unit" placeholder="Unit (grams/kg/L)" class="w-full border p-2 mb-3 rounded" required>
+                <input type="number" id="new_cost" placeholder="Cost per unit ($)" class="w-full border p-2 mb-3 rounded" step="0.01" required>
+                <input type="number" id="new_threshold" placeholder="Low Stock Threshold" class="w-full border p-2 mb-3 rounded" required>
+                <input type="text" id="new_supplier" placeholder="Supplier Name" class="w-full border p-2 mb-4 rounded">
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="toggleModal('ingredient-modal')" class="px-4 py-2 text-gray-500">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Save</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="/js/main.js"></script>
+    <script>
+        // --- Navigation Logic ---
+        function showSection(id) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.classList.toggle('hidden');
+        }
+
+        // --- API Calls ---
+        async function fetchIngredients() {
+            const res = await fetch('/api/inventory/ingredients'); // Hits listIngredients [cite: 172]
+            const result = await res.json();
+            const tableBody = document.getElementById('ingredients-table-body');
+            tableBody.innerHTML = '';
+
+            result.data.forEach(item => {
+                const isLow = item.stock_level <= item.low_stock_threshold;
+                const row = `
+                    <tr class="${isLow ? 'bg-red-50' : ''} border-b hover:bg-gray-50">
+                        <td class="px-5 py-4">${item.ingredient_name}</td>
+                        <td class="px-5 py-4">${item.stock_level} ${item.unit}</td>
+                        <td class="px-5 py-4">$${item.cost_per_unit}</td>
+                        <td class="px-5 py-4 text-gray-500">${item.supplier || 'N/A'}</td>
+                        <td class="px-5 py-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-bold ${isLow ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
+                                ${isLow ? 'LOW STOCK' : 'OK'}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            <button onclick="deleteIng(${item.ingredient_id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // --- Recipe Logic ---
+        function addIngredientRow() {
+            const container = document.getElementById('recipe-ingredients-list');
+            const row = `
+                <div class="flex space-x-2">
+                    <input type="number" placeholder="ID" class="w-1/4 border p-2 rounded" required>
+                    <input type="number" placeholder="Qty" class="w-2/4 border p-2 rounded" step="0.1" required>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-gray-400">×</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', row);
+        }
+
+        // Initial Load
+        window.onload = () => {
+            fetchIngredients();
+            addIngredientRow(); // Add one default row to recipe builder
+        };
+    </script>
 </body>
 </html>
