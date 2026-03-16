@@ -21,7 +21,16 @@ app.get('/', (req, res) => {
 });
 
 // 2. API Routes (Fetch Data)
-//app.get('/api/ingredients', inventoryController.getAllIngredients);
+app.get('/api/inventory/ingredients', inventoryController.listIngredients);
+app.post('/api/inventory/ingredients', inventoryController.addNewIngredient);
+app.put('/api/inventory/ingredients/:id', inventoryController.updateStock);
+app.delete('/api/inventory/ingredients/:id', inventoryController.removeIngredient);
+
+app.get('/api/inventory/alerts', inventoryController.checkAlerts);
+app.post('/api/inventory/menu', inventoryController.createDish);
+app.get('/api/inventory/menu/:id/cost', inventoryController.getDishCost);
+
+app.post('/api/inventory/wastage', inventoryController.recordWastage);
 
 // Start Server
 const PORT = 3000;
