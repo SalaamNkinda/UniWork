@@ -98,6 +98,21 @@ db.serialize(() => {
     recipes.forEach(r => insertRecipe.run(r));
     insertRecipe.finalize();
 
+    const seedTimesheets = [
+        `INSERT INTO timesheets (staff_id, clock_in, clock_out) VALUES (2, datetime('now', '-3 hours'), NULL)`,
+        
+        `INSERT INTO timesheets (staff_id, clock_in, clock_out) VALUES (3, datetime('now', '-8 hours'), datetime('now', '-1 hours'))`,
+        
+        `INSERT INTO timesheets (staff_id, clock_in, clock_out) VALUES (1, datetime('now', '-30 minutes'), NULL)`,
+        
+        `INSERT INTO timesheets (staff_id, clock_in, clock_out) VALUES (2, datetime('now', '-1 day', '-8 hours'), datetime('now', '-1 day'))`
+    ];
+
+    seedTimesheets.forEach(sql => {
+        db.run(sql, (err) => {
+            if (err) console.error("Error seeding timesheet:", err.message);
+        });
+    });
     console.log("✅ 20 Ingredients, 12 Menu Items, and 34 Recipes successfully seeded!");
     console.log("Press Ctrl+C to exit.");
 });
