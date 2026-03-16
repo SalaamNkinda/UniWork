@@ -115,6 +115,9 @@ body {
     background: none;
     color: var(--red-500);
     padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
 }
 .btn-danger-text:hover {
     color: var(--red-700);
