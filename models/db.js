@@ -109,11 +109,21 @@ db.serialize(() => {
         ingredient_id INTEGER,
         FOREIGN KEY(ingredient_id) REFERENCES ingredients(ingredient_id)
     )`);
+
+    //RESERVATIONS 
+    db.run(`CREATE TABLE IF NOT EXISTS reservations (
+        reservation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_name TEXT,
+        reservation_time DATETIME,
+        guests INTEGER,
+        table_id INTEGER,
+        FOREIGN KEY(table_id) REFERENCES tables(table_id)
+    )`);
     
     console.log("✅ Tables created (or verified). Database is clean.");
 });
 
-
+// seeding the necessary data for starting
 db.get("SELECT count(*) as count FROM users", (err, row) => {
     if (row && row.count === 0) {
         console.log("🌱 Users table empty. Creating 3 default roles...");
@@ -132,6 +142,22 @@ db.get("SELECT count(*) as count FROM users", (err, row) => {
         console.log("✅ 3 Users Created: Admin (1111), Waiter (2222), Chef (3333)");
     } else {
         console.log("✅ Database ready (Users already exist).");
+    }
+});
+
+db.get("SELECT count(*) as count FROM tables", (err, row) => {
+    if (row && row.count === 0) {
+        console.log("🌱 Tables table empty. Creating 6 default tables...");
+        
+        const insertTable = `INSERT INTO tables (table_number, table_status) VALUES (?, ?)`;
+
+        for (let i = 1; i <= 6; i++) {
+            db.run(insertTable, [`Table ${i}`, 'Empty']);
+        }
+
+        console.log("✅ 6 Default Tables Created (All set to 'Empty').");
+    } else {
+        console.log("✅ Database ready (Tables already exist).");
     }
 });
 
