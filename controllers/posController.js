@@ -2,25 +2,34 @@ const posModel = require('../models/posModel');
 
 exports.getFloorData = async (req, res) => {
     try {
-        const tables = await posModel.getTables();
-        const reservations = await posModel.getReservations();
+        const todayLocal = new Date();
+        const offset = todayLocal.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(todayLocal - offset)).toISOString().split('T')[0];
         
-        // 15-Minute Rule Logic Override
-        const now = new Date();
+        const selectedDate = req.query.date || localISOTime;
+        
+        const tables = await posModel.getTables();
+        const reservations = await posModel.getReservations(selectedDate);
+        
         const tablesMap = {};
         tables.forEach(t => tablesMap[t.table_id] = t);
 
-        reservations.forEach(r => {
-            const resTime = new Date(r.reservation_time);
-            const diffMins = (resTime - now) / 60000;
-            
-            // If the reservation is happening within the next 15 minutes or overdue
-            if (diffMins <= 15 && diffMins >= -60) {
-                if (tablesMap[r.table_id] && tablesMap[r.table_id].table_status === 'Empty') {
-                    tablesMap[r.table_id].table_status = 'Reserved'; 
+        if (selectedDate === localISOTime) {
+            const now = new Date();
+            reservations.forEach(r => {
+                // Safely interpret stored time back to local
+                const resTime = new Date(r.reservation_time);
+                const diffMins = (resTime.getTime() - now.getTime()) / 60000;
+                
+                // If reservation is happening in next 15 mins, or up to 2 hours into the reservation
+                if (diffMins <= 15 && diffMins >= -120) {
+                    // Only override if no one has physically placed an order ('Occupied') yet
+                    if (tablesMap[r.table_id] && tablesMap[r.table_id].table_status === 'Empty') {
+                        tablesMap[r.table_id].table_status = 'Reserved'; 
+                    }
                 }
-            }
-        });
+            });
+        }
 
         res.json({ success: true, tables: Object.values(tablesMap), reservations });
     } catch (err) {
@@ -30,6 +39,13 @@ exports.getFloorData = async (req, res) => {
 
 exports.createReservation = async (req, res) => {
     try {
+        const { table_id, reservation_time } = req.body;
+        
+        const isAvailable = await posModel.checkTableAvailability(table_id, reservation_time);
+        if (!isAvailable) {
+            return res.status(400).json({ success: false, message: "Table is already booked within 2 hours of this time." });
+        }
+
         await posModel.createReservation(req.body);
         res.json({ success: true });
     } catch (err) {

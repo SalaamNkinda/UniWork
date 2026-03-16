@@ -9,17 +9,34 @@ function getTables() {
     });
 }
 
-function getReservations() {
+function getReservations(dateStr) {
     return new Promise((resolve, reject) => {
         db.all(`
             SELECT r.*, t.table_number 
             FROM reservations r 
             JOIN tables t ON r.table_id = t.table_id
-            WHERE date(r.reservation_time) = date('now')
+            WHERE date(r.reservation_time) = date(?)
             ORDER BY r.reservation_time ASC
-        `, [], (err, rows) => {
+        `, [dateStr], (err, rows) => {
             if (err) return reject(err);
             resolve(rows);
+        });
+    });
+}
+
+// Ensure table doesn't have an overlapping booking within 2 hours
+function checkTableAvailability(tableId, reservationTime) {
+    return new Promise((resolve, reject) => {
+        // Math breakdown: ABS(ExistingRes - NewRes) * 24 Hours < 2 Hours
+        const sql = `
+            SELECT * FROM reservations 
+            WHERE table_id = ? 
+            AND ABS(julianday(reservation_time) - julianday(?)) * 24 < 2
+        `;
+        db.all(sql, [tableId, reservationTime], (err, rows) => {
+            if (err) return reject(err);
+            // If rows exist, table is not available
+            resolve(rows.length === 0);
         });
     });
 }
@@ -65,7 +82,6 @@ function createOrderTransaction(tableId, staffId, cartItems) {
                 const priceMap = {};
                 menuItems.forEach(m => priceMap[m.item_id] = m.selling_price);
 
-                // Re-calculate the actual total amount mathematically on the backend
                 let totalAmount = cartItems.reduce((sum, item) => {
                     const realPrice = priceMap[item.item_id] || 0;
                     return sum + (realPrice * item.quantity);
@@ -77,7 +93,7 @@ function createOrderTransaction(tableId, staffId, cartItems) {
                     if (err) { db.run('ROLLBACK'); return reject(err); }
                     const orderId = this.lastID;
 
-                    // 2. Update Table Status
+                    // 2. Update Table Status to physically occupied
                     db.run(`UPDATE tables SET table_status = 'Occupied' WHERE table_id = ?`, [tableId]);
 
                     // 3. Loop through Cart Items using Promise.all
@@ -135,7 +151,6 @@ function createOrderTransaction(tableId, staffId, cartItems) {
 
 function getKitchenOrders() {
     return new Promise((resolve, reject) => {
-        // Fetch estimated_time dynamically from DB
         const sql = `
             SELECT o.order_id, o.created_at, t.table_number, m.dish_name, oi.quantity, m.estimated_time 
             FROM orders o
@@ -155,11 +170,10 @@ function getKitchenOrders() {
                         order_id: row.order_id,
                         table_number: row.table_number,
                         created_at: row.created_at,
-                        max_time: row.estimated_time || 20, // Default to 20 if missing
+                        max_time: row.estimated_time || 20,
                         items: []
                     };
                 } else {
-                    // Update the max preparation time for the order container
                     if (row.estimated_time && row.estimated_time > ordersMap[row.order_id].max_time) {
                         ordersMap[row.order_id].max_time = row.estimated_time;
                     }
@@ -182,5 +196,5 @@ function markOrderCompleted(orderId) {
 }
 
 module.exports = {
-    getTables, getReservations, createReservation, getMenuItems, verifyAdminPin, createOrderTransaction, getKitchenOrders, markOrderCompleted
+    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPin, createOrderTransaction, getKitchenOrders, markOrderCompleted
 };

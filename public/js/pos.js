@@ -3,6 +3,18 @@ let selectedTableId = null;
 let cart = [];
 let allMenuItems = [];
 
+// --- Initialize Flatpickr & Boot ---
+document.addEventListener('DOMContentLoaded', () => {
+    flatpickr("#inline-calendar", {
+        inline: true,
+        defaultDate: "today",
+        onChange: function(selectedDates, dateStr, instance) {
+            fetchFloorData(); // Refresh the floor and reservations for the clicked date
+        }
+    });
+    fetchFloorData();
+});
+
 // --- Tabbing Logic ---
 function switchTab(tab) {
     document.querySelectorAll('.layout-split, #kitchen-section').forEach(el => el.classList.add('hidden'));
@@ -22,9 +34,20 @@ function switchTab(tab) {
 }
 
 // --- Floor Plan Logic ---
+function getSelectedDateStr() {
+    let dateStr = document.getElementById('inline-calendar').value;
+    if (!dateStr) {
+        const d = new Date();
+        const offset = d.getTimezoneOffset() * 60000;
+        dateStr = (new Date(d - offset)).toISOString().split('T')[0];
+    }
+    return dateStr;
+}
+
 async function fetchFloorData() {
     try {
-        const res = await fetch('/api/pos/floor');
+        const dateStr = getSelectedDateStr();
+        const res = await fetch(`/api/pos/floor?date=${dateStr}`);
         const data = await res.json();
         if(data.success) {
             renderTables(data.tables);
@@ -55,6 +78,7 @@ function renderReservations(resList) {
     const container = document.getElementById('reservations-container');
     container.innerHTML = '';
     resList.forEach(r => {
+        // Safe local parsing 
         const time = new Date(r.reservation_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         container.innerHTML += `
             <div style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
@@ -79,8 +103,14 @@ function selectTable(id, name) {
 
 async function openBookingModal() {
     document.getElementById('booking-modal').classList.remove('hidden');
+    
+    // Display the date selected in Flatpickr
+    const dateStr = getSelectedDateStr();
+    const displayDate = new Date(dateStr).toDateString();
+    document.getElementById('b-date-display').innerText = `Booking Date: ${displayDate}`;
+    
     // Fetch tables for the dropdown
-    const res = await fetch('/api/pos/floor');
+    const res = await fetch(`/api/pos/floor?date=${dateStr}`);
     const data = await res.json();
     const select = document.getElementById('b-table');
     select.innerHTML = '';
@@ -95,22 +125,31 @@ function closeBookingModal() {
 
 async function submitBooking() {
     const name = document.getElementById('b-name').value;
-    const time = document.getElementById('b-time').value;
+    const timeStr = document.getElementById('b-time').value; // from <input type="time">
     const guests = document.getElementById('b-guests').value;
     const tableId = document.getElementById('b-table').value;
+    const dateStr = getSelectedDateStr();
     
-    if(!name || !time || !guests || !tableId) return alert("Please fill all fields.");
+    if(!name || !timeStr || !guests || !tableId) return alert("Please fill all fields.");
+
+    // Standardize ISO-like timestamp for SQlite and JavaScript alignment
+    const reservationDateTime = `${dateStr}T${timeStr}:00`; 
 
     try {
         const res = await fetch('/api/pos/reservations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customer_name: name, reservation_time: time, guests, table_id: tableId })
+            body: JSON.stringify({ 
+                customer_name: name, 
+                reservation_time: reservationDateTime, 
+                guests, 
+                table_id: tableId 
+            })
         });
         const data = await res.json();
         if(data.success) {
             closeBookingModal();
-            fetchFloorData(); // Refresh the sidebar
+            fetchFloorData(); // Refresh the sidebar reservations
         } else {
             alert('Error: ' + data.message);
         }
@@ -133,9 +172,7 @@ function filterMenu(category) {
     document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
     
     const targetPill = Array.from(document.querySelectorAll('.pill')).find(p => p.innerText.trim() === category);
-    if (targetPill) {
-        targetPill.classList.add('active');
-    }
+    if (targetPill) targetPill.classList.add('active');
 
     const container = document.getElementById('menu-container');
     container.innerHTML = '';
@@ -172,9 +209,7 @@ function renderCart() {
         total += itemTotal;
         container.innerHTML += `
             <div class="ticket-item">
-                <div>
-                    <strong>${item.name}</strong> x${item.quantity}
-                </div>
+                <div><strong>${item.name}</strong> x${item.quantity}</div>
                 <div>$${itemTotal.toFixed(2)}</div>
             </div>
         `;
@@ -198,7 +233,7 @@ async function sendToKitchen() {
             selectedTableId = null;
             document.getElementById('pos-table-display').innerText = "Select a table from the Floor Plan first.";
             renderCart();
-            switchTab('floor'); // Returns gracefully to floor plan now
+            switchTab('floor'); 
         } else {
             alert('Error: ' + data.message);
         }
@@ -246,11 +281,9 @@ function renderKitchen(orders) {
     const now = new Date();
 
     orders.forEach(order => {
-        // Appending 'Z' fixes timezone offset issue, ensuring UTC parsing
         const orderTime = new Date(order.created_at + 'Z'); 
         const minsAgo = Math.floor((now - orderTime) / 60000); 
         
-        // Dynamically fetch maximum estimated time of the items in the order
         const maxTime = order.max_time || 20; 
         const isOverdue = minsAgo > maxTime; 
 
@@ -282,6 +315,3 @@ async function markDone(orderId) {
         if(data.success) fetchKitchenData(); 
     } catch(err) { console.error(err); }
 }
-
-// Load Floor plan by default on boot
-document.addEventListener('DOMContentLoaded', fetchFloorData);
