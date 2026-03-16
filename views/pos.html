@@ -27,11 +27,12 @@
             --border: rgba(0, 0, 0, 0.1);
             --radius: 0.625rem;
             
-            /* Status Colors exactly from screenshots */
+            /* Status Colors */
             --navy: #1e3a5f;
-            --success: #10b981; /* Green */
-            --warning: #f59e0b; /* Orange/Yellow */
-            --danger: #ef4444;  /* Red */
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444;  
+            --reserved: #8b5cf6; /* Purple */
         }
 
         body {
@@ -58,7 +59,7 @@
            NAVIGATION BAR
            ========================================= */
         .navbar { 
-            background-color: #3b82f6; /* Light Blue */
+            background-color: #3b82f6; 
             color: white; 
             padding: 1rem 2rem; 
             display: flex; 
@@ -94,7 +95,7 @@
         .layout-split { 
             display: grid; 
             grid-template-columns: 1fr 350px; 
-            height: calc(100vh - 66px); /* Viewport minus navbar height */
+            height: calc(100vh - 66px); 
         }
 
         .main-area { 
@@ -154,6 +155,7 @@
         .status-empty { background-color: var(--success); }
         .status-seated { background-color: var(--warning); }
         .status-occupied { background-color: var(--danger); }
+        .status-reserved { background-color: var(--reserved); }
         
         .legend-container { 
             display: flex; 
@@ -176,7 +178,7 @@
         }
 
         /* =========================================
-           RESERVATIONS SIDEBAR
+           RESERVATIONS & MODAL
            ========================================= */
         .btn-new-booking {
             background-color: var(--navy);
@@ -192,14 +194,50 @@
             transform-origin: top center;
             background: white;
             padding: 0.5rem;
-        }
-
-        .reservations-heading {
-            font-size: 1rem;
-            color: var(--muted-foreground);
-            margin-bottom: 1rem;
+            overflow: hidden;
         }
         
+        .flatpickr-calendar { 
+            width: 100% !important;
+            box-shadow: none !important; 
+            border: none !important; 
+        }
+
+        .reservations-heading { 
+            font-size: 1rem;
+             color: var(--muted-foreground);
+              margin-bottom: 1rem;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+        .modal input, .modal select {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
         /* =========================================
            POS MENU VIEW
            ========================================= */
@@ -409,32 +447,43 @@
         </div>
     </nav>
 
+    <div id="booking-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h2>New Booking</h2>
+            <input type="text" id="b-name" placeholder="Customer Name">
+            <input type="datetime-local" id="b-time">
+            <input type="number" id="b-guests" placeholder="Number of Guests" min="1">
+            <select id="b-table"></select>
+            <button class="btn-full btn-send" onclick="submitBooking()">Create Reservation</button>
+            <button class="btn-full btn-void" onclick="closeBookingModal()">Cancel</button>
+        </div>
+    </div>
+
     <div id="floor-section" class="layout-split">
         <div class="main-area">
             <h1>Live Floor Plan</h1>
             <p class="subtitle">Real-time table status and management</p>
             
-            <div class="floor-grid" id="tables-container">
-                </div>
+            <div class="floor-grid" id="tables-container"></div>
             
             <div class="legend-container">
                 <div class="legend-item"><div class="legend-box status-empty"></div> Empty</div>
                 <div class="legend-item"><div class="legend-box status-seated"></div> Seated</div>
+                <div class="legend-item"><div class="legend-box status-reserved"></div> Reserved (15min)</div>
                 <div class="legend-item"><div class="legend-box status-occupied"></div> Occupied/Eating</div>
             </div>
         </div>
         
         <div class="sidebar">
             <h2>Reservations</h2>
-            <button class="btn-full btn-new-booking">+ New Booking</button>
+            <button class="btn-full btn-new-booking" onclick="openBookingModal()">+ New Booking</button>
             
             <div class="calendar-container">
                 <input type="text" id="inline-calendar" class="hidden">
             </div>
             
             <h3 class="reservations-heading">Today's Reservations</h3>
-            <div id="reservations-container">
-                </div>
+            <div id="reservations-container"></div>
         </div>
     </div>
 
@@ -449,8 +498,7 @@
                 <button class="pill" onclick="filterMenu('Desserts')">Desserts</button>
             </div>
             
-            <div class="menu-grid" id="menu-container">
-                </div>
+            <div class="menu-grid" id="menu-container"></div>
         </div>
         
         <div class="sidebar">
@@ -465,7 +513,7 @@
             </div>
             
             <button class="btn-full btn-send" onclick="sendToKitchen()">Send to Kitchen</button>
-            <button class="btn-full btn-pay" onclick="alert('Payment Gateway Integration Pending')">Pay Now</button>
+            <button class="btn-full btn-pay" onclick="alert('Payment Gateway Integration Pending\n\nSuggestion: We can implement Stripe Checkout. Upon clicking, a Stripe Session URL is generated backend, redirecting the user. Once paid, a Stripe Webhook hits our server to update the status to Paid and free the table.')">Pay Now</button>
             <button class="btn-full btn-void" onclick="voidOrder()">Void Order (Admin PIN)</button>
         </div>
     </div>
@@ -475,19 +523,16 @@
             <h1>Kitchen Display System</h1>
             <p class="subtitle" id="kds-count">Active Orders: 0</p>
         </div>
-        <div class="kitchen-grid" id="kds-container">
-             </div>
+        <div class="kitchen-grid" id="kds-container"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Initialize the inline calendar in the sidebar
         flatpickr("#inline-calendar", {
             inline: true,
             defaultDate: "today"
         });
     </script>
-
     <script src="/js/pos.js"></script>
 </body>
 </html>
