@@ -4,40 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Inventory | Atif's Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .navbar { background-color: var(--blue-600); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .navbar h1 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+        .nav-links button { background: none; border: none; color: white; cursor: pointer; margin-left: 1rem; font-size: 1rem; }
+        .nav-links button:hover { text-decoration: underline; }
+        .nav-links .text-red-200 { color: var(--red-200); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .section-header h2 { margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--gray-800); }
+        .table-container { background-color: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: var(--gray-100); color: var(--gray-600); text-transform: uppercase; font-size: 0.875rem; padding: 0.75rem 1.25rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 1rem 1.25rem; border-bottom: 1px solid #e5e7eb; }
+        tr:hover { background-color: var(--gray-50); }
+        .row-low-stock { background-color: var(--red-50); }
+        .badge-ok { background-color: var(--green-200); color: var(--green-800); }
+        .badge-low { background-color: var(--red-200); color: var(--red-800); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .costing-box { background-color: var(--blue-50); padding: 1.5rem; border-radius: 0.5rem; border: 2px solid var(--blue-200); }
+        .costing-box h3 { font-weight: 700; color: var(--blue-800); margin-top: 0; margin-bottom: 1rem; font-size: 1.25rem; }
+        .costing-row { display: flex; justify-content: space-between; font-size: 1.125rem; margin-bottom: 0.5rem; }
+        .costing-divider { border-top: 1px solid var(--blue-200); padding-top: 0.5rem; margin-top: 0.5rem; }
+        .ingredient-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 39, 0.5); display: flex; justify-content: center; align-items: center; z-index: 50;}
+        .modal-content { background-color: white; padding: 2rem; border-radius: 0.5rem; width: 24rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .modal-content h3 { margin-top: 0; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body>
 
-    <nav class="bg-blue-600 text-white p-4 shadow-lg flex justify-between items-center">
-        <h1 class="text-xl font-bold"><i class="fas fa-utensils mr-2"></i> Salaam's Grill: Inventory</h1>
-        <div class="space-x-4">
-            <button onclick="showSection('ingredients-section')" class="hover:underline">Ingredients</button>
-            <button onclick="showSection('recipe-section')" class="hover:underline">Recipe Builder</button>
-            <button onclick="showSection('wastage-section')" class="hover:underline text-red-200">Log Wastage</button>
+    <nav class="navbar">
+        <h1><i class="fas fa-utensils mr-2"></i> Salaam's Grill: Inventory</h1>
+        <div class="nav-links">
+            <button onclick="showSection('ingredients-section')">Ingredients</button>
+            <button onclick="showSection('recipe-section')">Recipe Builder</button>
+            <button onclick="showSection('wastage-section')" class="text-red-200">Log Wastage</button>
         </div>
     </nav>
 
-    <div class="container mx-auto p-6">
+    <div class="container">
         
-        <section id="ingredients-section" class="block">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold text-gray-800">Kitchen Stock</h2>
-                <button onclick="toggleModal('ingredient-modal')" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                    <i class="fas fa-plus mr-2"></i>Add Ingredient
+        <section id="ingredients-section">
+            <div class="section-header">
+                <h2>Kitchen Stock</h2>
+                <button onclick="toggleModal('ingredient-modal')" class="btn btn-success">
+                    <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>Add Ingredient
                 </button>
             </div>
 
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full leading-normal">
+            <div class="table-container">
+                <table>
                     <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm">
-                            <th class="px-5 py-3 border-b text-left">Ingredient</th>
-                            <th class="px-5 py-3 border-b text-left">Stock Level</th>
-                            <th class="px-5 py-3 border-b text-left">Unit Cost</th>
-                            <th class="px-5 py-3 border-b text-left">Supplier</th>
-                            <th class="px-5 py-3 border-b text-left">Status</th>
-                            <th class="px-5 py-3 border-b text-center">Actions</th>
+                        <tr>
+                            <th>Ingredient</th>
+                            <th>Stock Level</th>
+                            <th>Unit Cost</th>
+                            <th>Supplier</th>
+                            <th>Status</th>
+                            <th style="text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="ingredients-table-body">
@@ -47,127 +75,115 @@
         </section>
 
         <section id="recipe-section" class="hidden">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Recipe Builder & Auto-Costing</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow">
+            <div class="section-header">
+                <h2>Recipe Builder & Auto-Costing</h2>
+            </div>
+            
+            <div class="grid-2">
+                <div class="card">
                     <form id="recipe-form">
-                        <label class="block mb-2 font-bold">Dish Name</label>
-                        <input type="text" id="dish_name" class="w-full border p-2 mb-4 rounded" placeholder="e.g. Margherita Pizza" required>
+                        <div class="form-group">
+                            <label class="form-label">Dish Name</label>
+                            <input type="text" id="dish_name" class="form-input" placeholder="e.g. Margherita Pizza" required>
+                        </div>
                         
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block mb-2 font-bold">Category</label>
-                                <select id="dish_category" class="w-full border p-2 rounded">
-                                    <option>Pizza</option><option>Sides</option><option>Drinks</option>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select id="dish_category" class="form-select">
+                                    <option>Pizza</option>
+                                    <option>Sides</option>
+                                    <option>Drinks</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block mb-2 font-bold">Price ($)</label>
-                                <input type="number" id="selling_price" class="w-full border p-2 rounded" step="0.01" required>
+                            <div class="form-group">
+                                <label class="form-label">Price ($)</label>
+                                <input type="number" id="selling_price" class="form-input" step="0.01" min="0" required>
                             </div>
                         </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Estimated Time (Mins)</label>
+                            <input type="number" id="estimated_time" class="form-input" min="0" required>
+                        </div>
 
-                        <label class="block mb-2 font-bold text-blue-600">Link Ingredients [cite: 16, 17]</label>
-                        <div id="recipe-ingredients-list" class="space-y-2 mb-4">
+                        <label class="form-label" style="color: var(--blue-600);">Link Ingredients</label>
+                        <div id="recipe-ingredients-list" style="margin-bottom: 1rem;">
                             </div>
-                        <button type="button" onclick="addIngredientRow()" class="text-sm text-blue-500 font-bold">+ Add Ingredient to Recipe</button>
-                        <hr class="my-6">
-                        <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700">Save Menu Item</button>
+                        <button type="button" onclick="addIngredientRow()" style="background:none; border:none; color:var(--blue-500); font-weight:bold; cursor:pointer;">+ Add Ingredient to Recipe</button>
+                        
+                        <hr style="border: 0; border-top: 1px solid var(--gray-100); margin: 1.5rem 0;">
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">Save Menu Item</button>
                     </form>
                 </div>
 
-                <div class="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
-                    <h3 class="font-bold text-blue-800 mb-4 text-xl">Auto-Costing Preview</h3>
-                    <div class="flex justify-between text-lg mb-2">
+                <div class="costing-box">
+                    <h3>Auto-Costing Preview</h3>
+                    <div class="costing-row">
                         <span>Production Cost:</span>
-                        <span id="cost-preview" class="font-bold">$0.00</span>
+                        <span id="cost-preview" style="font-weight: 700;">$0.00</span>
                     </div>
-                    <div class="flex justify-between text-lg border-t pt-2 border-blue-200">
+                    <div class="costing-row costing-divider">
                         <span>Profit Margin:</span>
-                        <span id="margin-preview" class="font-bold text-green-600">0%</span>
+                        <span id="margin-preview" style="font-weight: 700; color: var(--gray-500);">0%</span>
                     </div>
                 </div>
             </div>
         </section>
+        
+        <section id="wastage-section" class="hidden">
+            <div class="section-header">
+                <h2>Log Kitchen Wastage</h2>
+            </div>
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <form id="wastage-form">
+                    <div class="form-group">
+                        <label class="form-label">Which ingredient was wasted?</label>
+                        <select id="wastage_ingredient" class="form-select" required>
+                            <option value="" disabled selected>Select Ingredient...</option>
+                            </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantity Wasted</label>
+                        <input type="number" id="wastage_qty" class="form-input" min="0.01" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reason</label>
+                        <select id="wastage_reason" class="form-select" required>
+                            <option value="" disabled selected>Select Reason...</option>
+                            <option>Dropped / Spilled</option>
+                            <option>Spoiled / Expired</option>
+                            <option>Prep Error</option>
+                            <option>Burnt</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">Submit Wastage Report</button>
+                </form>
+            </div>
+        </section>
+
     </div>
 
-    <div id="ingredient-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg w-96 shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">Add Raw Ingredient</h3>
+    <div id="ingredient-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Add Raw Ingredient</h3>
             <form id="add-ingredient-form">
-                <input type="text" id="new_name" placeholder="Name (e.g. Cheese)" class="w-full border p-2 mb-3 rounded" required>
-                <input type="number" id="new_stock" placeholder="Initial Stock" class="w-full border p-2 mb-3 rounded" required>
-                <input type="text" id="new_unit" placeholder="Unit (grams/kg/L)" class="w-full border p-2 mb-3 rounded" required>
-                <input type="number" id="new_cost" placeholder="Cost per unit ($)" class="w-full border p-2 mb-3 rounded" step="0.01" required>
-                <input type="number" id="new_threshold" placeholder="Low Stock Threshold" class="w-full border p-2 mb-3 rounded" required>
-                <input type="text" id="new_supplier" placeholder="Supplier Name" class="w-full border p-2 mb-4 rounded">
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="toggleModal('ingredient-modal')" class="px-4 py-2 text-gray-500">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Save</button>
+                <input type="text" id="new_name" placeholder="Name (e.g. Cheese)" class="form-input" style="margin-bottom: 0.5rem;" required>
+                <input type="number" id="new_stock" placeholder="Initial Stock" class="form-input" min="0" step="0.01" style="margin-bottom: 0.5rem;" required>
+                <input type="text" id="new_unit" placeholder="Unit (grams/kg/L)" class="form-input" style="margin-bottom: 0.5rem;" required>
+                <input type="number" id="new_cost" placeholder="Cost per unit ($)" class="form-input" min="0" step="0.01" style="margin-bottom: 0.5rem;" required>
+                <input type="number" id="new_threshold" placeholder="Low Stock Threshold" class="form-input" min="0" step="0.01" style="margin-bottom: 0.5rem;" required>
+                <input type="text" id="new_supplier" placeholder="Supplier Name" class="form-input">
+                
+                <div class="modal-actions">
+                    <button type="button" onclick="toggleModal('ingredient-modal')" class="btn" style="color: var(--gray-500); background:none;">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
-        // --- Navigation Logic ---
-        function showSection(id) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-        }
-
-        function toggleModal(id) {
-            const m = document.getElementById(id);
-            m.classList.toggle('hidden');
-        }
-
-        // --- API Calls ---
-        async function fetchIngredients() {
-            const res = await fetch('/api/inventory/ingredients'); // Hits listIngredients [cite: 172]
-            const result = await res.json();
-            const tableBody = document.getElementById('ingredients-table-body');
-            tableBody.innerHTML = '';
-
-            result.data.forEach(item => {
-                const isLow = item.stock_level <= item.low_stock_threshold;
-                const row = `
-                    <tr class="${isLow ? 'bg-red-50' : ''} border-b hover:bg-gray-50">
-                        <td class="px-5 py-4">${item.ingredient_name}</td>
-                        <td class="px-5 py-4">${item.stock_level} ${item.unit}</td>
-                        <td class="px-5 py-4">$${item.cost_per_unit}</td>
-                        <td class="px-5 py-4 text-gray-500">${item.supplier || 'N/A'}</td>
-                        <td class="px-5 py-4">
-                            <span class="px-2 py-1 rounded-full text-xs font-bold ${isLow ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
-                                ${isLow ? 'LOW STOCK' : 'OK'}
-                            </span>
-                        </td>
-                        <td class="px-5 py-4 text-center">
-                            <button onclick="deleteIng(${item.ingredient_id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-                tableBody.insertAdjacentHTML('beforeend', row);
-            });
-        }
-
-        // --- Recipe Logic ---
-        function addIngredientRow() {
-            const container = document.getElementById('recipe-ingredients-list');
-            const row = `
-                <div class="flex space-x-2">
-                    <input type="number" placeholder="ID" class="w-1/4 border p-2 rounded" required>
-                    <input type="number" placeholder="Qty" class="w-2/4 border p-2 rounded" step="0.1" required>
-                    <button type="button" onclick="this.parentElement.remove()" class="text-gray-400">×</button>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', row);
-        }
-
-        // Initial Load
-        window.onload = () => {
-            fetchIngredients();
-            addIngredientRow(); // Add one default row to recipe builder
-        };
-    </script>
+    <script type="module" src="/js/inventory.js"></script>
 </body>
 </html>
