@@ -126,3 +126,147 @@ body {
     font-size: 0.75rem;
     font-weight: 700;
 }
+
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.split-screen-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* LEFT SIDE: WHITE FORM AREA */
+.login-form-side {
+    flex: 1;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    min-width: 400px;
+}
+
+.form-wrapper {
+    width: 100%;
+    max-width: 380px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    margin-bottom: 30px;
+}
+
+.logo-icon {
+    font-size: 30px;
+    margin-right: 10px;
+}
+
+h1 {
+    font-size: 32px;
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.subtitle a {
+    color: #ff5a1f;
+    text-decoration: none;
+}
+
+/* FORM INPUTS */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.form-options {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+/* ORANGE LOGIN BUTTON */
+.btn-login {
+    width: 100%;
+    padding: 14px;
+    background-color: #ff5a1f; /* SeedProd Orange */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-login:hover {
+    background-color: #e44d18;
+}
+
+.forgot-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: #ff5a1f;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer-copyright {
+    margin-top: 50px;
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.footer-copyright a {
+    color: #666;
+    text-decoration: none;
+}
+
+/* RIGHT SIDE: ILLUSTRATION AREA */
+.login-image-side {
+    flex: 1.5;
+    background: linear-gradient(135deg, #110033 0%, #330066 50%, #ff5a1f 100%);
+    background-image: url('https://images.unsplash.com/photo-1517976487492-5750f3195933?q=80&w=2070'); /* Rocket Placeholder */
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 800px) {
+    .login-image-side { display: none; }
+}
