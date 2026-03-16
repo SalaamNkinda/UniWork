@@ -1,0 +1,126 @@
+/* Base Styles */
+:root {
+    --primary-blue: #2563eb;
+    --success-green: #16a34a;
+    --danger-red: #dc2626;
+    --light-bg: #f9fafb;
+    --border-color: #e5e7eb;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--light-bg);
+    margin: 0;
+    color: #374151;
+}
+
+/* Navigation [cite: 68-71] */
+.navbar {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.navbar h1 { margin: 0; font-size: 1.25rem; }
+
+.nav-links button {
+    background: none;
+    border: none;
+    color: white;
+    margin-left: 1rem;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.nav-links button:hover { text-decoration: underline; }
+
+/* Main Content Area */
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Table Styling */
+.table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #f3f4f6;
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #4b5563;
+    border-bottom: 2px solid var(--border-color);
+}
+
+td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Low Stock Logic  */
+.row-low-stock {
+    background-color: #fee2e2;
+}
+
+/* Status Badges */
+.badge {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.badge-ok { background: #dcfce7; color: #166534; }
+.badge-low { background: #fecaca; color: #991b1b; }
+
+/* Recipe Builder Layout */
+.recipe-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.form-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Modal [cite: 24] */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 400px;
+}
+
+.hidden { display: none; }
