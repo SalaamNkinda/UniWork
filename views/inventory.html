@@ -4,81 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Inventory | Atif's Dashboard</title>
-    
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* Navigation */
-        .navbar {
-            background-color: var(--blue-600);
-            color: white;
-            padding: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .navbar { background-color: var(--blue-600); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
         .navbar h1 { margin: 0; font-size: 1.25rem; font-weight: 700; }
-        .nav-links button {
-            background: none; border: none; color: white;
-            cursor: pointer; margin-left: 1rem; font-size: 1rem;
-        }
+        .nav-links button { background: none; border: none; color: white; cursor: pointer; margin-left: 1rem; font-size: 1rem; }
         .nav-links button:hover { text-decoration: underline; }
         .nav-links .text-red-200 { color: var(--red-200); }
-
-        /* Section Headers */
-        .section-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;
-        }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .section-header h2 { margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--gray-800); }
-
-        /* Tables */
-        .table-container {
-            background-color: white; border-radius: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;
-        }
+        .table-container { background-color: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
-        th { 
-            background-color: var(--gray-100); color: var(--gray-600); 
-            text-transform: uppercase; font-size: 0.875rem; padding: 0.75rem 1.25rem; text-align: left; 
-            border-bottom: 1px solid #e5e7eb;
-        }
+        th { background-color: var(--gray-100); color: var(--gray-600); text-transform: uppercase; font-size: 0.875rem; padding: 0.75rem 1.25rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
         td { padding: 1rem 1.25rem; border-bottom: 1px solid #e5e7eb; }
         tr:hover { background-color: var(--gray-50); }
         .row-low-stock { background-color: var(--red-50); }
-        
-        /* Badges */
         .badge-ok { background-color: var(--green-200); color: var(--green-800); }
         .badge-low { background-color: var(--red-200); color: var(--red-800); }
-
-        /* Grids */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-        
-        /* Recipe Specific Elements */
-        .costing-box {
-            background-color: var(--blue-50); padding: 1.5rem; 
-            border-radius: 0.5rem; border: 2px solid var(--blue-200);
-        }
+        .costing-box { background-color: var(--blue-50); padding: 1.5rem; border-radius: 0.5rem; border: 2px solid var(--blue-200); }
         .costing-box h3 { font-weight: 700; color: var(--blue-800); margin-top: 0; margin-bottom: 1rem; font-size: 1.25rem; }
         .costing-row { display: flex; justify-content: space-between; font-size: 1.125rem; margin-bottom: 0.5rem; }
         .costing-divider { border-top: 1px solid var(--blue-200); padding-top: 0.5rem; margin-top: 0.5rem; }
-        
-        .ingredient-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
-        .ingredient-row input:nth-child(1) { flex: 1; }
-        .ingredient-row input:nth-child(2) { flex: 2; }
-        .ingredient-row button { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 1.25rem; }
-
-        /* Modals */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(17, 24, 39, 0.5);
-            display: flex; justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background-color: white; padding: 2rem; border-radius: 0.5rem;
-            width: 24rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
+        .ingredient-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 39, 0.5); display: flex; justify-content: center; align-items: center; z-index: 50;}
+        .modal-content { background-color: white; padding: 2rem; border-radius: 0.5rem; width: 24rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
         .modal-content h3 { margin-top: 0; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
     </style>
@@ -146,13 +98,13 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Price ($)</label>
-                                <input type="number" id="selling_price" class="form-input" step="0.01" required>
+                                <input type="number" id="selling_price" class="form-input" step="0.01" min="0" required>
                             </div>
                         </div>
                         
                         <div class="form-group">
                             <label class="form-label">Estimated Time (Mins)</label>
-                            <input type="number" id="estimated_time" class="form-input" required>
+                            <input type="number" id="estimated_time" class="form-input" min="0" required>
                         </div>
 
                         <label class="form-label" style="color: var(--blue-600);">Link Ingredients</label>
@@ -173,8 +125,8 @@
                         <span id="cost-preview" style="font-weight: 700;">$0.00</span>
                     </div>
                     <div class="costing-row costing-divider">
-                        <span>Status:</span>
-                        <span id="margin-preview" style="font-weight: 700; color: var(--green-600);">Save to calculate</span>
+                        <span>Profit Margin:</span>
+                        <span id="margin-preview" style="font-weight: 700; color: var(--gray-500);">0%</span>
                     </div>
                 </div>
             </div>
@@ -184,8 +136,30 @@
             <div class="section-header">
                 <h2>Log Kitchen Wastage</h2>
             </div>
-            <div class="card">
-                <p>Wastage form goes here...</p>
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <form id="wastage-form">
+                    <div class="form-group">
+                        <label class="form-label">Which ingredient was wasted?</label>
+                        <select id="wastage_ingredient" class="form-select" required>
+                            <option value="" disabled selected>Select Ingredient...</option>
+                            </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantity Wasted</label>
+                        <input type="number" id="wastage_qty" class="form-input" min="0.01" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reason</label>
+                        <select id="wastage_reason" class="form-select" required>
+                            <option value="" disabled selected>Select Reason...</option>
+                            <option>Dropped / Spilled</option>
+                            <option>Spoiled / Expired</option>
+                            <option>Prep Error</option>
+                            <option>Burnt</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">Submit Wastage Report</button>
+                </form>
             </div>
         </section>
 
@@ -195,11 +169,11 @@
         <div class="modal-content">
             <h3>Add Raw Ingredient</h3>
             <form id="add-ingredient-form">
-                <input type="text" id="new_name" placeholder="Name (e.g. Cheese)" class="form-input" required>
-                <input type="number" id="new_stock" placeholder="Initial Stock" class="form-input" step="0.01" required>
-                <input type="text" id="new_unit" placeholder="Unit (grams/kg/L)" class="form-input" required>
-                <input type="number" id="new_cost" placeholder="Cost per unit ($)" class="form-input" step="0.01" required>
-                <input type="number" id="new_threshold" placeholder="Low Stock Threshold" class="form-input" step="0.01" required>
+                <input type="text" id="new_name" placeholder="Name (e.g. Cheese)" class="form-input" style="margin-bottom: 0.5rem;" required>
+                <input type="number" id="new_stock" placeholder="Initial Stock" class="form-input" min="0" step="0.01" style="margin-bottom: 0.5rem;" required>
+                <input type="text" id="new_unit" placeholder="Unit (grams/kg/L)" class="form-input" style="margin-bottom: 0.5rem;" required>
+                <input type="number" id="new_cost" placeholder="Cost per unit ($)" class="form-input" min="0" step="0.01" style="margin-bottom: 0.5rem;" required>
+                <input type="number" id="new_threshold" placeholder="Low Stock Threshold" class="form-input" min="0" step="0.01" style="margin-bottom: 0.5rem;" required>
                 <input type="text" id="new_supplier" placeholder="Supplier Name" class="form-input">
                 
                 <div class="modal-actions">
