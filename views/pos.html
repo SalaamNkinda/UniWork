@@ -456,14 +456,7 @@
 </head>
 <body>
 
-    <nav class="navbar">
-        <h2><i class="fas fa-utensils mr-2"></i> Salaam's Grill: Inventory</h2>
-        <div class="nav-links">
-            <button class="active" onclick="switchTab('floor')">Live Floor Plan</button>
-            <button onclick="switchTab('pos')">Point of Sale</button>
-            <button onclick="switchTab('kitchen')">Kitchen Display</button>
-        </div>
-    </nav>
+    <div id="navbar-container"></div>
 
     <div id="booking-modal" class="modal-overlay hidden">
         <div class="modal">
@@ -547,5 +540,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="/js/pos.js"></script>
+    <script src="/js/nav.js"></script>
 </body>
 </html>

@@ -17,17 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- Tabbing Logic ---
 function switchTab(tab) {
+    // 1. Hide all sections
     document.querySelectorAll('.layout-split, #kitchen-section').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.nav-links button').forEach(btn => btn.classList.remove('active'));
     
-    const tabButtons = { 'floor': 0, 'pos': 1, 'kitchen': 2 };
-    const btnIndex = tabButtons[tab];
-    if (btnIndex !== undefined) {
-        document.querySelectorAll('.nav-links button')[btnIndex].classList.add('active');
-    }
+    // 2. Show the target section
+    const targetSection = document.getElementById(`${tab}-section`);
+    if (targetSection) targetSection.classList.remove('hidden');
 
-    document.getElementById(`${tab}-section`).classList.remove('hidden');
-
+    // 3. Fetch data if necessary
     if (tab === 'floor') fetchFloorData();
     if (tab === 'pos') fetchMenu();
     if (tab === 'kitchen') fetchKitchenData();

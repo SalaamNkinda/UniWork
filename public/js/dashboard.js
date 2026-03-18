@@ -3,14 +3,15 @@ let currentPin = "";
 
 // --- Tabbing Logic ---
 function switchTab(tab) {
+    // 1. Hide all sections
     document.getElementById('dashboard-section').classList.add('hidden');
     document.getElementById('roster-section').classList.add('hidden');
     
-    document.querySelectorAll('.nav-links button').forEach(btn => btn.classList.remove('active'));
-    
-    event.target.classList.add('active');
-    document.getElementById(`${tab}-section`).classList.remove('hidden');
+    // 2. Show the target section
+    const targetSection = document.getElementById(`${tab}-section`);
+    if (targetSection) targetSection.classList.remove('hidden');
 
+    // 3. Fetch data if necessary
     if (tab === 'roster') fetchStaffData();
 }
 
