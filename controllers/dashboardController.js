@@ -11,14 +11,15 @@ exports.getStaff = async (req, res) => {
 
 exports.handleClockAction = async (req, res) => {
     try {
-        const { pin } = req.body;
-        if (!pin) return res.status(400).json({ success: false, message: "PIN is required." });
+        // Look for username instead of pin
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ success: false, message: "Username is required." });
 
-        const result = await dashboardModel.processClockAction(pin);
+        const result = await dashboardModel.processClockAction(username);
         res.json({ success: true, action: result.action, user: result.user });
     } catch (err) {
-        // If it's our custom "Invalid PIN" error, send a 401 Unauthorized
-        if (err.message === "Invalid PIN") {
+        // Match the error message we threw in the updated model
+        if (err.message === "User not found") {
             return res.status(401).json({ success: false, message: err.message });
         }
         res.status(500).json({ success: false, message: err.message });

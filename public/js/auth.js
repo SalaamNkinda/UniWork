@@ -78,6 +78,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 }
 
                 setCookie('user_role', data.role, 1);
+                setCookie('current_user', username, 1);
                 
                 // Redirect based on role
                 if (data.role === 'admin') {

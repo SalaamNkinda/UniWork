@@ -237,15 +237,34 @@ async function sendToKitchen() {
     } catch(err) { console.error(err); }
 }
 
+// Helper to read the cookie we set during login
+function getRoleCookie() {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; user_role=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
 async function voidOrder() {
-    const pin = prompt("Enter Admin PIN to void this order:");
-    if (!pin) return;
+    const role = getRoleCookie();
+
+    // 1. If they are already logged in as Admin/Owner, void it instantly
+    if (role === 'admin' || role === 'owner') {
+        cart = [];
+        renderCart();
+        alert("Order voided successfully (Admin Override).");
+        return;
+    }
+
+    // 2. If a Waiter is logged in, ask for an Admin password
+    const password = prompt("Manager override required. Enter Admin Password:");
+    if (!password) return;
 
     try {
-        const res = await fetch('/api/pos/verify-pin', {
+        const res = await fetch('/api/pos/verify-pin', { // You can rename this route later if you want
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin })
+            body: JSON.stringify({ password: password }) // Sending password instead of pin
         });
         const data = await res.json();
         
@@ -254,7 +273,7 @@ async function voidOrder() {
             renderCart();
             alert("Order voided successfully.");
         } else {
-            alert("Invalid PIN. Only Admins can void orders.");
+            alert("Invalid Password. Only Admins can void orders.");
         }
     } catch(err) { console.error(err); }
 }

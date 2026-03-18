@@ -1,6 +1,3 @@
-// /public/js/dashboard.js
-let currentPin = "";
-
 // --- Tabbing Logic ---
 function switchTab(tab) {
     // 1. Hide all sections
@@ -63,60 +60,41 @@ function renderStaffTable(staff) {
     });
 }
 
-// --- PIN Modal Logic ---
-function openPinModal() {
-    clearPin();
-    document.getElementById('pin-modal').classList.remove('hidden');
-}
-
-function closePinModal() {
-    document.getElementById('pin-modal').classList.add('hidden');
-}
-
-function appendPin(num) {
-    if (currentPin.length < 4) {
-        currentPin += num.toString();
-        updatePinDisplay();
+// Helper to grab cookies
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
     }
+    return null;
 }
 
-function clearPin() {
-    currentPin = "";
-    updatePinDisplay();
-}
-
-function updatePinDisplay() {
-    const dots = document.querySelectorAll('.pin-dot');
-    dots.forEach((dot, index) => {
-        if (index < currentPin.length) {
-            dot.classList.add('filled');
-            dot.innerText = "*"; // Mask the PIN for security
-        } else {
-            dot.classList.remove('filled');
-            dot.innerText = "";
-        }
-    });
-}
-
-async function submitPin() {
-    if (currentPin.length === 0) return;
+async function handleClockAction() {
+    // Silently grab the username of the person currently logged in
+    const username = getCookie('current_user');
+    
+    if (!username) {
+        alert("Session expired. Please log in again.");
+        window.location.href = '/';
+        return;
+    }
 
     try {
         const res = await fetch('/api/admin/clock', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin: currentPin })
+            body: JSON.stringify({ username: username }) // Send the cookie value silently
         });
         const data = await res.json();
-        
+
         if (data.success) {
             const actionText = data.action === 'clocked_in' ? 'Clocked In' : 'Clocked Out';
             alert(`Success: ${data.user} has successfully ${actionText}!`);
-            closePinModal();
             fetchStaffData(); // Refresh table
         } else {
-            alert(data.message); // E.g., "Invalid PIN"
-            clearPin(); // Clear so they can try again
+            alert(data.message); 
         }
     } catch(err) {
         console.error(err);

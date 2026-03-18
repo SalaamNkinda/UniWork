@@ -23,12 +23,12 @@ function getStaffStatus() {
     });
 }
 
-function processClockAction(pin) {
+function processClockAction(username) {
     return new Promise((resolve, reject) => {
-        // 1. Find the user by PIN
-        db.get("SELECT user_id, full_name FROM users WHERE pin_code = ?", [pin], (err, user) => {
+        // 1. Find the user by their username (passed from the frontend cookie)
+        db.get("SELECT user_id, full_name FROM users WHERE username = ?", [username], (err, user) => {
             if (err) return reject(err);
-            if (!user) return reject(new Error("Invalid PIN"));
+            if (!user) return reject(new Error("User not found"));
 
             // 2. Check their latest timesheet
             db.get("SELECT timesheet_id, clock_in, clock_out FROM timesheets WHERE staff_id = ? ORDER BY timesheet_id DESC LIMIT 1", [user.user_id], (err, timesheet) => {
@@ -51,7 +51,6 @@ function processClockAction(pin) {
         });
     });
 }
-
 module.exports = {
     getStaffStatus,
     processClockAction
