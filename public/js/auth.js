@@ -1,4 +1,4 @@
-// COOKIE HELPER FUNCTIONS 
+// 1. COOKIE HELPER FUNCTIONS 
 function setCookie(name, value, days) {
     let expires = "";
     if (days) {
@@ -38,57 +38,74 @@ window.onload = () => {
     }
 };
 
-// LOGIN LOGIC 
+// 4. LOGIN LOGIC 
 document.getElementById('loginForm').addEventListener('submit', async function(event) {
     event.preventDefault();
     
     const usernameInput = document.getElementById('username');
     const pinInput = document.getElementById('password');
     const rememberMe = document.getElementById('rememberMe').checked;
+    
     const errorDiv = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
 
     const username = usernameInput.value.toLowerCase().trim();
     const pin = pinInput.value;
 
-    // Hash the PIN before checking with the backend
-    const hashedPin = await hashPin(pin);
-
     try {
+        // Hash the PIN before checking with the backend
+        const hashedPin = await hashPin(pin);
+
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, pin: pin, hashedPin: hashedPin })
+            body: JSON.stringify({ username, pin, hashedPin })
         });
 
-        const data = await response.json();
+        // Safely check if the response is actually JSON before parsing
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
 
-        if (data.success) {
-            // Handle "Remember Me" Cookie
-            if (rememberMe) {
-                setCookie('remembered_user', username, 30); // Save for 30 days
+            if (data.success) {
+                // Handle "Remember Me" Cookie
+                if (rememberMe) {
+                    setCookie('remembered_user', username, 30); 
+                } else {
+                    setCookie('remembered_user', '', -1); 
+                }
+
+                setCookie('user_role', data.role, 1);
+                
+                // Redirect based on role
+                if (data.role === 'admin') {
+                    window.location.href = '/dashboard.html';
+                } else if (data.role === 'waiter') {
+                    window.location.href = '/pos.html';
+                } else if (data.role === 'chef') {
+                    window.location.href = '/inventory.html';
+                }
             } else {
-                setCookie('remembered_user', '', -1); // Delete cookie
-            }
-
-            setCookie('user_role', data.role, 1);
-            
-            // Redirect based on role provided by the database
-            if (data.role === 'admin') {
-                window.location.href = '/dashboard.html';
-            } else if (data.role === 'waiter') {
-                window.location.href = '/pos.html';
-            } else if (data.role === 'chef') {
-                window.location.href = '/inventory.html';
+                // Display the actual error sent by the server (e.g., "Invalid username or PIN.")
+                showError(data.message || 'Invalid Employee ID or PIN.');
             }
         } else {
-            errorDiv.innerText = data.message || 'Invalid credentials. Please try again.';
-            errorDiv.style.display = 'block';
+            // The server crashed and returned something else (like an HTML error page)
+            showError('Server error. Please try again later.');
         }
     } catch (error) {
         console.error('Login error:', error);
-        errorDiv.innerText = 'Server error during login.';
-        errorDiv.style.display = 'block';
+        showError('Network error or server is unreachable.');
+    }
+
+    // Helper to trigger the error animation
+    function showError(message) {
+        errorText.innerText = message;
+        errorDiv.classList.remove('hidden');
+        errorDiv.classList.remove('shake');
+        void errorDiv.offsetWidth; // Trigger DOM reflow to restart animation
+        errorDiv.classList.add('shake');
     }
 });

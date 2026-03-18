@@ -1,7 +1,43 @@
 // scripts/seedData.js
 const db = require('../models/db');
+const crypto = require('crypto');
 
 console.log("🌱 Starting Massive Database Seeding...");
+
+const hashPin = (pin) => crypto.createHash('sha256').update(pin).digest('hex');
+
+db.get("SELECT count(*) as count FROM users", (err, row) => {
+    if (row && row.count === 0) {
+        console.log("🌱 Users table empty. Creating 3 default roles...");
+        
+        const insertUser = `INSERT INTO users (full_name, username, role, password_hash, hourly_rate) VALUES (?, ?, ?, ?, ?)`;
+
+        // Using Employee IDs (e.g., admin, waiter1, chef1) as the username
+        db.run(insertUser, ['Majid', 'admin', 'admin', hashPin('1111'), 25.0]);
+        db.run(insertUser, ['Salaam', 'waiter', 'waiter', hashPin('2222'), 15.0]);
+        db.run(insertUser, ['Atif', 'chef', 'chef', hashPin('3333'), 18.0]);
+
+        console.log("✅ 3 Users Created with Hashed PINs: Admin (1111), Waiter (2222), Chef (3333)");
+    } else {
+        console.log("✅ Database ready (Users already exist).");
+    }
+});
+
+db.get("SELECT count(*) as count FROM tables", (err, row) => {
+    if (row && row.count === 0) {
+        console.log("🌱 Tables table empty. Creating 6 default tables...");
+        
+        const insertTable = `INSERT INTO tables (table_number, table_status) VALUES (?, ?)`;
+
+        for (let i = 1; i <= 6; i++) {
+            db.run(insertTable, [`Table ${i}`, 'Empty']);
+        }
+
+        console.log("✅ 6 Default Tables Created (All set to 'Empty').");
+    } else {
+        console.log("✅ Database ready (Tables already exist).");
+    }
+});
 
 db.serialize(() => {
     // 1. Seed Ingredients
