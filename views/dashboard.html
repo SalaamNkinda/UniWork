@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Inventory | Majid's Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        :root {
+            --font-family: 'Inter', sans-serif;
+            --background: #f3f3f5;
+            --foreground: #222222;
+            --card: #ffffff;
+            --primary: #030213;
+            --primary-foreground: #ffffff;
+            --muted: #ececf0;
+            --muted-foreground: #717182;
+            --border: rgba(0, 0, 0, 0.1);
+            --radius: 0.625rem;
+            
+            --navy: #1e3a5f;
+            --success: #10b981; 
+            --warning: #f59e0b; 
+            --danger: #ef4444;  
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            background-color: var(--background);
+            color: var(--foreground);
+        }
+
+        h1, h2, h3 { margin-top: 0; }
+        .hidden { display: none !important; }
+        .subtitle { color: var(--muted-foreground); margin-bottom: 2rem; }
+
+        /* Navbar */
+        .navbar { 
+            background-color: #3b82f6; /* Light Blue to match POS */
+            color: white; 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        .nav-links button { 
+            background: none; border: none; color: white; cursor: pointer; 
+            margin-left: 1rem; font-size: 1rem; opacity: 0.7; transition: opacity 0.2s;
+        }
+
+        .nav-links button:hover { opacity: 1; }
+        .nav-links button.active { font-weight: bold; opacity: 1; border-bottom: 2px solid white; padding-bottom: 0.25rem; }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Staff Roster Table Styles */
+        .roster-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .btn-clock {
+            background-color: var(--navy);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .table-container {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--foreground);
+            font-weight: 600;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-in { background-color: var(--success); color: white; }
+        .status-out { background-color: var(--muted); color: var(--muted-foreground); }
+
+        /* Modal Styles (Staff Login / PIN Pad) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--card);
+            padding: 2rem;
+            border-radius: var(--radius);
+            width: 320px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem;
+            background: none; border: none; font-size: 1.5rem;
+            cursor: pointer; color: var(--muted-foreground);
+        }
+
+        .pin-display {
+            display: flex; justify-content: center; gap: 0.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .pin-dot {
+            width: 40px; height: 40px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; font-weight: bold;
+        }
+
+        .pin-dot.filled { border-color: var(--navy); background-color: var(--muted); }
+
+        .keypad {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
+        }
+
+        .key-btn {
+            background-color: #f8fafc;
+            border: 1px solid transparent;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        .key-btn:active { background-color: var(--muted); border-color: var(--border); }
+        .key-clear { background-color: #fee2e2; color: var(--danger); }
+        .key-ok { background-color: var(--success); color: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <h2><i class="fas fa-utensils mr-2"></i> Salaam's Grill: Inventory</h2>
+        <div class="nav-links">
+            <button onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="active" onclick="switchTab('roster')">Staff Roster</button>
+        </div>
+    </nav>
+
+    <div id="dashboard-section" class="container hidden">
+        <h1>Admin Dashboard</h1>
+        <p class="subtitle">Business intelligence and overview</p>
+        <div class="table-container" style="padding: 3rem; text-align: center; color: var(--muted-foreground);">
+            <p>Dashboard charts and analytics pending design implementation.</p>
+        </div>
+    </div>
+
+    <div id="roster-section" class="container">
+        
+        <div class="roster-header">
+            <div>
+                <h1>Staff Roster & Time Clock</h1>
+                <p class="subtitle" style="margin-bottom: 0;">Manage employee schedules and attendance</p>
+            </div>
+            <button class="btn-clock" onclick="openPinModal()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Clock In/Out
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Shift Start Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="staff-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="pin-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closePinModal()">&times;</button>
+            <h2>Staff Login</h2>
+            <p style="color: var(--muted-foreground); margin-bottom: 1rem;">Enter PIN to Clock In/Out</p>
+            
+            <div class="pin-display" id="pin-display">
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+            </div>
+
+            <div class="keypad">
+                <button class="key-btn" onclick="appendPin(1)">1</button>
+                <button class="key-btn" onclick="appendPin(2)">2</button>
+                <button class="key-btn" onclick="appendPin(3)">3</button>
+                <button class="key-btn" onclick="appendPin(4)">4</button>
+                <button class="key-btn" onclick="appendPin(5)">5</button>
+                <button class="key-btn" onclick="appendPin(6)">6</button>
+                <button class="key-btn" onclick="appendPin(7)">7</button>
+                <button class="key-btn" onclick="appendPin(8)">8</button>
+                <button class="key-btn" onclick="appendPin(9)">9</button>
+                <button class="key-btn key-clear" onclick="clearPin()">Clear</button>
+                <button class="key-btn" onclick="appendPin(0)">0</button>
+                <button class="key-btn key-ok" onclick="submitPin()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
