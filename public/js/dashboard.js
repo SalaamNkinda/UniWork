@@ -103,3 +103,64 @@ async function handleClockAction() {
 
 // Initial fetch on page load
 document.addEventListener('DOMContentLoaded', fetchStaffData);
+
+// --- NEW: BUSINESS ANALYTICS LOGIC ---
+
+async function loadBusinessStats() {
+    try {
+        const response = await fetch('/api/admin/stats/today');
+        const result = await response.json();
+
+        if (result.success) {
+            const data = result.data;
+            
+            // Update the Metric Cards
+            document.getElementById('revenue-val').innerText = `$${data.revenue}`;
+            document.getElementById('profit-val').innerText = `$${data.profit}`;
+            document.getElementById('margin-val').innerText = `${data.margin} Margin`;
+            document.getElementById('busy-val').innerText = data.busiestTime;
+            document.getElementById('staff-val').innerText = data.staffActive;
+
+            // Render the Graph if chart data is provided
+            if (data.chart) {
+                renderDashboardChart(data.chart);
+            }
+        }
+    } catch (err) {
+        console.error("Failed to load business stats:", err);
+    }
+}
+
+function renderDashboardChart(chartData) {
+    const canvas = document.getElementById('revenueChart');
+    if (!canvas) return; // Guard clause if element doesn't exist yet
+
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Revenue ($)',
+                data: chartData.revenueData,
+                borderColor: '#ff5a1f', // Uniform Orange Accent
+                backgroundColor: 'rgba(255, 90, 31, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+// --- INITIALIZATION ---
+// Update your existing window.onload or add this:
+window.addEventListener('DOMContentLoaded', () => {
+    loadBusinessStats();
+    // Keep your existing staff loading call here too
+    if (typeof loadStaff === 'function') loadStaff(); 
+});
