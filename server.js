@@ -13,7 +13,7 @@ app.use(express.static('views'));  // Serve HTML files
 // Link to the separate controller files
 const inventoryController = require('./controllers/inventoryController');
 const posController = require('./controllers/posController');
-const adminController = require('./controllers/adminController');
+const dashboardController = require('./controllers/dashboardController');
 
 // --- ROUTES ---
 app.get('/', (req, res) => {
@@ -43,8 +43,8 @@ app.put('/api/pos/kitchen/:id/done', posController.completeOrder);
 app.post('/api/pos/reservations', posController.createReservation);
 
 
-app.get('/api/admin/staff', adminController.getStaff);
-app.post('/api/admin/clock', adminController.handleClockAction);
+app.get('/api/admin/staff', dashboardController.getStaff);
+app.post('/api/admin/clock', dashboardController.handleClockAction);
 
 // Start Server
 const PORT = 3000;

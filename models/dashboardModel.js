@@ -1,7 +1,3 @@
-/**
- * adminModel.js
- * Handles database queries for the Admin Dashboard and Staff Roster
- */
 const db = require('./db');
 
 function getStaffStatus() {
