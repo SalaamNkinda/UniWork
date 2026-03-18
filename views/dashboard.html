@@ -280,7 +280,7 @@
                 <h1>Staff Roster & Time Clock</h1>
                 <p class="subtitle" style="margin-bottom: 0;">Manage employee schedules and attendance</p>
             </div>
-            <button class="btn-clock" onclick="openPinModal()">
+            <button class="btn-clock" onclick="handleClockAction()">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Clock In/Out
             </button>
@@ -299,36 +299,6 @@
                 <tbody id="staff-table-body">
                     </tbody>
             </table>
-        </div>
-    </div>
-
-    <div id="pin-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closePinModal()">&times;</button>
-            <h2>Staff Login</h2>
-            <p style="color: var(--muted-foreground); margin-bottom: 1rem;">Enter PIN to Clock In/Out</p>
-            
-            <div class="pin-display" id="pin-display">
-                <div class="pin-dot"></div>
-                <div class="pin-dot"></div>
-                <div class="pin-dot"></div>
-                <div class="pin-dot"></div>
-            </div>
-
-            <div class="keypad">
-                <button class="key-btn" onclick="appendPin(1)">1</button>
-                <button class="key-btn" onclick="appendPin(2)">2</button>
-                <button class="key-btn" onclick="appendPin(3)">3</button>
-                <button class="key-btn" onclick="appendPin(4)">4</button>
-                <button class="key-btn" onclick="appendPin(5)">5</button>
-                <button class="key-btn" onclick="appendPin(6)">6</button>
-                <button class="key-btn" onclick="appendPin(7)">7</button>
-                <button class="key-btn" onclick="appendPin(8)">8</button>
-                <button class="key-btn" onclick="appendPin(9)">9</button>
-                <button class="key-btn key-clear" onclick="clearPin()">Clear</button>
-                <button class="key-btn" onclick="appendPin(0)">0</button>
-                <button class="key-btn key-ok" onclick="submitPin()">OK</button>
-            </div>
         </div>
     </div>
 

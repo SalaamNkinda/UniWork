@@ -78,6 +78,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 }
 
                 setCookie('user_role', data.role, 1);
+                setCookie('current_user', username, 1);
                 
                 // Redirect based on role
                 if (data.role === 'admin') {
@@ -85,9 +86,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 } else if (data.role === 'waiter') {
                     window.location.href = '/pos.html?tab=floor';
                 } else if (data.role === 'chef') {
-                    window.location.href = '/inventory.html?tab=ingredients';
-                } else if (data.role === 'owner') {
-                    window.location.href = '/dashboard.html?tab=dashboard';
+                    window.location.href = '/pos.html?tab=kitchen';
                 }
             } else {
                 // Display the actual error sent by the server (e.g., "Invalid username or PIN.")

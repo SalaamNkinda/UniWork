@@ -1,4 +1,5 @@
 const db = require('./db');
+const crypto = require('crypto');
 
 function getTables() {
     return new Promise((resolve, reject) => {
@@ -60,14 +61,18 @@ function getMenuItems() {
     });
 }
 
-function verifyAdminPin(pin) {
+function verifyAdminPassword(password) {
     return new Promise((resolve, reject) => {
-        db.get("SELECT * FROM users WHERE pin_code = ? AND role = 'admin'", [pin], (err, row) => {
+        // Hash the typed password using SHA-256 (matches your auth.js logic)
+        const hashedPass = crypto.createHash('sha256').update(password.toString()).digest('hex');
+
+        // Check if a user exists with this password who is an admin
+        db.get("SELECT * FROM users WHERE hashed_password = ? AND role = 'admin'", [hashedPass], (err, row) => {
             if (err) return reject(err);
-            resolve(!!row);
+            resolve(!!row); // Returns true if authorized, false if not
         });
     });
-}
+};
 
 function createOrderTransaction(tableId, staffId, cartItems) {
     return new Promise((resolve, reject) => {
@@ -196,5 +201,5 @@ function markOrderCompleted(orderId) {
 }
 
 module.exports = {
-    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPin, createOrderTransaction, getKitchenOrders, markOrderCompleted
+    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrderTransaction, getKitchenOrders, markOrderCompleted
 };

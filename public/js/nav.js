@@ -66,10 +66,9 @@ function renderNavbar() {
 
     // 2. Access Control Matrix (Who sees what)
     const roleAccess = {
-        admin: ['dashboard', 'roster'],
+        admin: ['dashboard', 'roster', 'floor', 'pos', 'kitchen', 'ingredients', 'recipe', 'wastage'],
         waiter: ['floor', 'pos', 'roster'],
-        chef: ['ingredients', 'recipe', 'wastage', 'roster'],
-        owner: ['dashboard', 'roster', 'floor', 'pos', 'kitchen', 'ingredients', 'recipe', 'wastage']
+        chef: ['kitchen', 'ingredients', 'recipe', 'wastage', 'roster'],
     };
 
     const allowedKeys = roleAccess[role] || [];
@@ -88,9 +87,9 @@ function renderNavbar() {
 
     // 4. Security Check: Boot them if they try to access a hidden URL directly
     if (!allowedKeys.includes(currentTab)) {
-        if (role === 'admin' || role === 'owner') window.location.href = '/dashboard.html?tab=dashboard';
+        if (role === 'admin') window.location.href = '/dashboard.html?tab=dashboard';
         else if (role === 'waiter') window.location.href = '/pos.html?tab=floor';
-        else if (role === 'chef') window.location.href = '/inventory.html?tab=ingredients';
+        else if (role === 'chef') window.location.href = '/pos.html?tab=kitchen';
         return;
     }
 

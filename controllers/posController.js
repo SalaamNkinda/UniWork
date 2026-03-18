@@ -64,7 +64,10 @@ exports.getMenu = async (req, res) => {
 
 exports.verifyPin = async (req, res) => {
     try {
-        const isValid = await posModel.verifyAdminPin(req.body.pin);
+        const { password } = req.body;
+        if (!password) return res.status(400).json({ success: false, message: "Password is required" });
+ 
+        const isValid = await posModel.verifyAdminPassword(password);
         res.json({ success: true, isValid });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
