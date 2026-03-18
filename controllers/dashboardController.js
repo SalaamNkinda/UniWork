@@ -1,8 +1,8 @@
-const adminModel = require('../models/adminModel');
+const dashboardModel = require('../models/dashboardModel');
 
 exports.getStaff = async (req, res) => {
     try {
-        const staff = await adminModel.getStaffStatus();
+        const staff = await dashboardModel.getStaffStatus();
         res.json({ success: true, staff });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
@@ -14,7 +14,7 @@ exports.handleClockAction = async (req, res) => {
         const { pin } = req.body;
         if (!pin) return res.status(400).json({ success: false, message: "PIN is required." });
 
-        const result = await adminModel.processClockAction(pin);
+        const result = await dashboardModel.processClockAction(pin);
         res.json({ success: true, action: result.action, user: result.user });
     } catch (err) {
         // If it's our custom "Invalid PIN" error, send a 401 Unauthorized
