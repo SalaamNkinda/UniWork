@@ -14,13 +14,17 @@ app.use(express.static('views'));  // Serve HTML files
 const inventoryController = require('./controllers/inventoryController');
 const posController = require('./controllers/posController');
 const dashboardController = require('./controllers/dashboardController');
+const authController = require('./controllers/authController');
 
 // --- ROUTES ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/index.html'));
 });
 
+
 // 2. API Routes (Fetch Data)
+app.post('/api/login', authController.handleLogin);
+
 app.get('/api/inventory/ingredients', inventoryController.listIngredients);
 app.post('/api/inventory/ingredients', inventoryController.addNewIngredient);
 app.put('/api/inventory/ingredients/:id', inventoryController.updateStock);
@@ -32,7 +36,6 @@ app.get('/api/inventory/menu/:id/cost', inventoryController.getDishCost);
 
 app.post('/api/inventory/wastage', inventoryController.recordWastage);
 
-
 app.get('/api/pos/floor', posController.getFloorData);
 app.get('/api/pos/menu', posController.getMenu);
 app.post('/api/pos/verify-pin', posController.verifyPin);
@@ -41,7 +44,6 @@ app.post('/api/pos/order', posController.placeOrder);
 app.get('/api/pos/kitchen', posController.getKitchenData);
 app.put('/api/pos/kitchen/:id/done', posController.completeOrder);
 app.post('/api/pos/reservations', posController.createReservation);
-
 
 app.get('/api/admin/staff', dashboardController.getStaff);
 app.post('/api/admin/clock', dashboardController.handleClockAction);

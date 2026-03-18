@@ -218,11 +218,10 @@ h1 {
     margin-bottom: 25px;
 }
 
-/* ORANGE LOGIN BUTTON */
 .btn-login {
     width: 100%;
     padding: 14px;
-    background-color: #ff5a1f; /* SeedProd Orange */
+    background-color: var(--blue-600);
     color: white;
     border: none;
     border-radius: 4px;
@@ -233,17 +232,9 @@ h1 {
 }
 
 .btn-login:hover {
-    background-color: #e44d18;
+    background-color: var(--blue-700);
 }
 
-.forgot-link {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    color: #ff5a1f;
-    text-decoration: none;
-    font-size: 14px;
-}
 
 .footer-copyright {
     margin-top: 50px;
@@ -261,10 +252,11 @@ h1 {
 /* RIGHT SIDE: ILLUSTRATION AREA */
 .login-image-side {
     flex: 1.5;
-    background: linear-gradient(135deg, #110033 0%, #330066 50%, #ff5a1f 100%);
-    background-image: url('https://www.unileverfoodsolutions.us/chef-training/food-service-and-hospitality-marketing/food-photography-and-food-plating-tips-and-techniques/6-professional-food-photography-tips-and-tricks/jcr:content/parsys/content-aside-footer/tipsandadvice_967146439/image.img.jpg/1648559356546.jpg'); /* burger picture */
+    background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-600) 50%, var(--blue-200) 100%);
+    background-image: url('https://www.unileverfoodsolutions.us/chef-training/food-service-and-hospitality-marketing/food-photography-and-food-plating-tips-and-techniques/6-professional-food-photography-tips-and-tricks/jcr:content/parsys/content-aside-footer/tipsandadvice_967146439/image.img.jpg/1648559356546.jpg');
     background-size: cover;
     background-position: center;
+    background-blend-mode: overlay;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -272,4 +264,45 @@ h1 {
 
 @media (max-width: 800px) {
     .login-image-side { display: none; }
+}
+
+/* --- UI Alert Messages --- */
+.alert {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.alert-danger {
+    background-color: var(--red-50);
+    color: var(--red-800);
+    border: 1px solid var(--red-200);
+}
+
+.alert-icon {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+/* Animations for the error box */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
 }

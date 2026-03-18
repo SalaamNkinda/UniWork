@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const crypto = require('crypto');
 
 // Connect to database
 const dbPath = path.resolve(__dirname, '../restaurant.db');
@@ -23,7 +24,6 @@ db.serialize(() => {
         username TEXT UNIQUE,
         role TEXT, 
         password_hash TEXT,
-        pin_code TEXT,
         hourly_rate REAL
     )`);
 
@@ -123,42 +123,5 @@ db.serialize(() => {
     console.log("✅ Tables created (or verified). Database is clean.");
 });
 
-// seeding the necessary data for starting
-db.get("SELECT count(*) as count FROM users", (err, row) => {
-    if (row && row.count === 0) {
-        console.log("🌱 Users table empty. Creating 3 default roles...");
-        
-        const insertUser = `INSERT INTO users (full_name, username, role, pin_code, password_hash, hourly_rate) VALUES (?, ?, ?, ?, ?, ?)`;
-
-        // 1. Majid (Admin)
-        db.run(insertUser, ['Admin', 'admin one', 'admin', '1111', 'hashed_pass', 25.0]);
-        
-        // 2. Salaam (Waiter)
-        db.run(insertUser, ['Waiter', 'waiter one ', 'waiter', '2222', 'hashed_pass', 15.0]);
-        
-        // 3. Atif (Chef)
-        db.run(insertUser, ['Chef', 'chef one', 'chef', '3333', 'hashed_pass', 18.0]);
-
-        console.log("✅ 3 Users Created: Admin (1111), Waiter (2222), Chef (3333)");
-    } else {
-        console.log("✅ Database ready (Users already exist).");
-    }
-});
-
-db.get("SELECT count(*) as count FROM tables", (err, row) => {
-    if (row && row.count === 0) {
-        console.log("🌱 Tables table empty. Creating 6 default tables...");
-        
-        const insertTable = `INSERT INTO tables (table_number, table_status) VALUES (?, ?)`;
-
-        for (let i = 1; i <= 6; i++) {
-            db.run(insertTable, [`Table ${i}`, 'Empty']);
-        }
-
-        console.log("✅ 6 Default Tables Created (All set to 'Empty').");
-    } else {
-        console.log("✅ Database ready (Tables already exist).");
-    }
-});
 
 module.exports = db;
