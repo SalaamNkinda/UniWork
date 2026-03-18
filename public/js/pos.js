@@ -248,8 +248,8 @@ function getRoleCookie() {
 async function voidOrder() {
     const role = getRoleCookie();
 
-    // 1. If they are already logged in as Admin/Owner, void it instantly
-    if (role === 'admin' || role === 'owner') {
+    // 1. If they are already logged in as Admin, void it instantly
+    if (role === 'admin') {
         cart = [];
         renderCart();
         alert("Order voided successfully (Admin Override).");
