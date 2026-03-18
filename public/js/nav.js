@@ -93,31 +93,58 @@ function renderNavbar() {
         return;
     }
 
-    // 5. Build the Dynamic HTML
+    // 5. Build the Dynamic HTML for a Left Sidebar
     const navContainer = document.getElementById('navbar-container');
     if (!navContainer) return;
 
     let navHTML = `
-        <nav class="navbar" style="background-color: #3b82f6; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="margin:0; font-size:1.25rem;"><i class="fas fa-utensils mr-2"></i> Salaam's Grill</h2>
-            <div class="nav-links" style="display: flex; align-items: center;">
+        <nav class="sidebar-nav" style="background-color: #3b82f6; color: white; width: 250px; height: 100vh; padding: 2rem 0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; box-sizing: border-box; z-index: 1000; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
+            
+            <h2 style="margin: 0 0 2.5rem 0; font-size: 1.25rem; text-align: left; padding: 0 1.5rem;">
+                <i class="fas fa-utensils mr-2"></i> Salaam's Grill
+            </h2>
+            
+            <div class="nav-links" style="display: flex; flex-direction: column; flex-grow: 1; width: 100%;">
     `;
 
     // Only render buttons the role has access to
     allowedKeys.forEach(key => {
         const item = screens[key];
         const isActive = (currentTab === item.tabId);
-        // We apply styles inline slightly to guarantee it looks right regardless of which file it injects into
-        const activeStyle = isActive ? 'font-weight: bold; opacity: 1; border-bottom: 2px solid white; padding-bottom: 0.25rem;' : 'opacity: 0.7;';
         
-        navHTML += `<button onclick="goToTab('${item.page}', '${item.tabId}')" style="background: none; border: none; color: white; cursor: pointer; margin-left: 1.5rem; font-size: 1rem; transition: opacity 0.2s; ${activeStyle}">${item.name}</button>`;
+        // Base styling for sidebar buttons (left-aligned, full width)
+        const baseStyle = 'background: none; border: none; color: white; cursor: pointer; font-size: 1rem; transition: all 0.2s; text-align: left; padding: 1rem 1.5rem; width: 100%; display: block; box-sizing: border-box;';
+        
+        // Active styling (white left border and slight background highlight)
+        const activeStyle = isActive 
+            ? 'background-color: rgba(255,255,255,0.15); font-weight: bold; border-left: 4px solid white;' 
+            : 'opacity: 0.75; border-left: 4px solid transparent;';
+        
+        navHTML += `
+            <button onclick="goToTab('${item.page}', '${item.tabId}')" 
+                    onmouseover="this.style.backgroundColor='rgba(255,255,255,0.1)'" 
+                    onmouseout="this.style.backgroundColor='${isActive ? 'rgba(255,255,255,0.15)' : 'transparent'}'"
+                    style="${baseStyle} ${activeStyle}">
+                ${item.name}
+            </button>`;
     });
 
     navHTML += `
-                <button onclick="logout()" style="background: none; border: none; color: #fecaca; cursor: pointer; margin-left: 1.5rem; font-size: 1rem;">Logout</button>
+            </div>
+            
+            <div style="padding: 1rem 1.5rem; margin-top: auto;">
+                <button onclick="logout()" 
+                        onmouseover="this.style.opacity='1'" 
+                        onmouseout="this.style.opacity='0.8'"
+                        style="background: none; border: none; color: #fecaca; cursor: pointer; font-size: 1rem; text-align: left; width: 100%; padding: 0.5rem 0; opacity: 0.8; transition: opacity 0.2s;">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                </button>
             </div>
         </nav>
     `;
 
     navContainer.innerHTML = navHTML;
+
+    // 6. Push the main body content to the right so it doesn't hide behind the sidebar
+    document.body.style.marginLeft = "250px";
 }
