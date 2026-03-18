@@ -81,11 +81,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 
                 // Redirect based on role
                 if (data.role === 'admin') {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/dashboard.html?tab=dashboard';
                 } else if (data.role === 'waiter') {
-                    window.location.href = '/pos.html';
+                    window.location.href = '/pos.html?tab=floor';
                 } else if (data.role === 'chef') {
-                    window.location.href = '/inventory.html';
+                    window.location.href = '/inventory.html?tab=ingredients';
+                } else if (data.role === 'owner') {
+                    window.location.href = '/dashboard.html?tab=dashboard';
                 }
             } else {
                 // Display the actual error sent by the server (e.g., "Invalid username or PIN.")

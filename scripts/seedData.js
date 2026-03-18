@@ -16,8 +16,9 @@ db.get("SELECT count(*) as count FROM users", (err, row) => {
         db.run(insertUser, ['Majid', 'admin', 'admin', hashPin('1111'), 25.0]);
         db.run(insertUser, ['Salaam', 'waiter', 'waiter', hashPin('2222'), 15.0]);
         db.run(insertUser, ['Atif', 'chef', 'chef', hashPin('3333'), 18.0]);
+        db.run(insertUser, ['Owner', 'owner', 'owner', hashPin('0000'), 30.0]);
 
-        console.log("✅ 3 Users Created with Hashed PINs: Admin (1111), Waiter (2222), Chef (3333)");
+        console.log("✅ 4 Users Created with Hashed PINs: Admin (1111), Waiter (2222), Chef (3333), Owner (0000)");
     } else {
         console.log("✅ Database ready (Users already exist).");
     }
