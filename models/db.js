@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const crypto = require('crypto'); // <-- Added for hashing
 
 // Connect to database
 const dbPath = path.resolve(__dirname, '../restaurant.db');
@@ -123,6 +124,8 @@ db.serialize(() => {
     console.log("✅ Tables created (or verified). Database is clean.");
 });
 
+const hashPin = (pin) => crypto.createHash('sha256').update(pin).digest('hex');
+
 // seeding the necessary data for starting
 db.get("SELECT count(*) as count FROM users", (err, row) => {
     if (row && row.count === 0) {
@@ -130,16 +133,16 @@ db.get("SELECT count(*) as count FROM users", (err, row) => {
         
         const insertUser = `INSERT INTO users (full_name, username, role, pin_code, password_hash, hourly_rate) VALUES (?, ?, ?, ?, ?, ?)`;
 
-        // 1. Majid (Admin)
-        db.run(insertUser, ['Admin', 'admin one', 'admin', '1111', 'hashed_pass', 25.0]);
+        // 1. Admin - PIN 1111
+        db.run(insertUser, ['Admin', 'admin one', 'admin', '1111', hashPin('1111'), 25.0]);
         
-        // 2. Salaam (Waiter)
-        db.run(insertUser, ['Waiter', 'waiter one ', 'waiter', '2222', 'hashed_pass', 15.0]);
+        // 2. Waiter - PIN 2222
+        db.run(insertUser, ['Waiter', 'waiter one ', 'waiter', '2222', hashPin('2222'), 15.0]);
         
-        // 3. Atif (Chef)
-        db.run(insertUser, ['Chef', 'chef one', 'chef', '3333', 'hashed_pass', 18.0]);
+        // 3. Chef - PIN 3333
+        db.run(insertUser, ['Chef', 'chef one', 'chef', '3333', hashPin('3333'), 18.0]);
 
-        console.log("✅ 3 Users Created: Admin (1111), Waiter (2222), Chef (3333)");
+        console.log("✅ 3 Users Created with Hashed PINs: Admin (1111), Waiter (2222), Chef (3333)");
     } else {
         console.log("✅ Database ready (Users already exist).");
     }
