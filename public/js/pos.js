@@ -93,7 +93,7 @@ function renderReservations(resList) {
 
 async function selectTable(id, name) {
     selectedTableId = id;
-    currentOrderId = null; // Reset when switching tables
+    currentOrderId = null; 
     document.getElementById('pos-table-display').innerText = `Ordering for: ${name}`;
     
     try {
@@ -101,8 +101,8 @@ async function selectTable(id, name) {
         const data = await res.json();
         
         if (data.success && data.order) {
-            cart = data.order.items; 
-            currentOrderId = data.order.order_id; // Capture the active order ID
+            cart = data.order.items.map(item => ({...item, isSent: true})); 
+            currentOrderId = data.order.order_id; 
         } else {
             cart = []; 
         }
@@ -111,7 +111,7 @@ async function selectTable(id, name) {
         console.error("Error fetching table order:", err); 
     }
 
-    goToTab('/pos.html', 'pos'); // Switch to POS tab after selecting a table
+    goToTab('/pos.html', 'pos'); 
 }
 
 async function openBookingModal() {
@@ -201,9 +201,12 @@ function filterMenu(category) {
 }
 
 function addToCart(id, name, price) {
-    const existing = cart.find(i => i.item_id === id);
-    if (existing) existing.quantity++;
-    else cart.push({ item_id: id, name, selling_price: price, quantity: 1 });
+    const existing = cart.find(i => i.item_id === id && !i.isSent);
+    if (existing) {
+        existing.quantity++;
+    } else {
+        cart.push({ item_id: id, name, selling_price: price, quantity: 1, isSent: false });
+    }
     renderCart();
 }
 
@@ -220,9 +223,14 @@ function renderCart() {
     cart.forEach(item => {
         const itemTotal = item.selling_price * item.quantity;
         total += itemTotal;
+        
+        const statusBadge = item.isSent 
+            ? '<span style="font-size: 0.7rem; background: #eee; color: #666; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Sent</span>' 
+            : '<span style="font-size: 0.7rem; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">New</span>';
+
         container.innerHTML += `
-            <div class="ticket-item">
-                <div><strong>${item.name}</strong> x${item.quantity}</div>
+            <div class="ticket-item" style="${item.isSent ? 'opacity: 0.6;' : ''}">
+                <div><strong>${item.name}</strong> x${item.quantity} ${statusBadge}</div>
                 <div>$${itemTotal.toFixed(2)}</div>
             </div>
         `;
@@ -232,13 +240,20 @@ function renderCart() {
 
 async function sendToKitchen() {
     if (!selectedTableId) return alert("Please select a table from the Floor Plan first.");
-    if (cart.length === 0) return alert("Cart is empty.");
+    
+    const newItems = cart.filter(i => !i.isSent);
+    
+    if (newItems.length === 0) return alert("No new items to send.");
 
     try {
         const res = await fetch('/api/pos/order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tableId: selectedTableId, cart: cart })
+            body: JSON.stringify({ 
+                tableId: selectedTableId, 
+                currentOrderId: currentOrderId, // Pass the active order ID to the backend
+                cart: newItems 
+            })
         });
         const data = await res.json();
         if (data.success) {

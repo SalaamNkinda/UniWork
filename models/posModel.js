@@ -73,7 +73,7 @@ function verifyAdminPassword(password) {
     });
 };
 
-function createOrderTransaction(tableId, staffId, cartItems) {
+function createOrUpdateOrderTransaction(tableId, staffId, cartItems, currentOrderId) {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
             db.run('BEGIN TRANSACTION');
@@ -86,21 +86,14 @@ function createOrderTransaction(tableId, staffId, cartItems) {
                 const priceMap = {};
                 menuItems.forEach(m => priceMap[m.item_id] = m.selling_price);
 
-                let totalAmount = cartItems.reduce((sum, item) => {
+                // Calculate the cost of ONLY the newly added items
+                let newItemsTotal = cartItems.reduce((sum, item) => {
                     const realPrice = priceMap[item.item_id] || 0;
                     return sum + (realPrice * item.quantity);
                 }, 0);
 
-                // 1. Insert Order
-                db.run(`INSERT INTO orders (order_status, total_amount, table_id, staff_id) VALUES ('Pending', ?, ?, ?)`, 
-                [totalAmount, tableId, staffId], function(err) {
-                    if (err) { db.run('ROLLBACK'); return reject(err); }
-                    const orderId = this.lastID;
-
-                    // 2. Update Table Status to physically occupied
-                    db.run(`UPDATE tables SET table_status = 'Occupied' WHERE table_id = ?`, [tableId]);
-
-                    // 3. Loop through Cart Items using Promise.all
+                // Reusable function to insert items and deduct inventory
+                const processItems = (orderId) => {
                     let itemPromises = cartItems.map(item => {
                         return new Promise((resItem, rejItem) => {
                             const realPrice = priceMap[item.item_id] || 0;
@@ -110,7 +103,7 @@ function createOrderTransaction(tableId, staffId, cartItems) {
                             [item.quantity, itemTotal, orderId, item.item_id], function(err) {
                                 if (err) return rejItem(err);
 
-                                // 4. Auto-Deduct Ingredients via Recipes table
+                                // Auto-Deduct Ingredients via Recipes table
                                 db.all(`SELECT ingredient_id, quantity FROM recipes WHERE item_id = ?`, [item.item_id], (err, recipes) => {
                                     if (err) return rejItem(err);
                                     if (!recipes || recipes.length === 0) return resItem();
@@ -147,7 +140,27 @@ function createOrderTransaction(tableId, staffId, cartItems) {
                             db.run('ROLLBACK');
                             reject(err);
                         });
-                });
+                };
+
+                if (currentOrderId) {
+                    db.run(`UPDATE orders SET total_amount = total_amount + ? WHERE order_id = ?`, 
+                    [newItemsTotal, currentOrderId], function(err) {
+                        if (err) { db.run('ROLLBACK'); return reject(err); }
+                        
+                        // Ensure table is marked occupied
+                        db.run(`UPDATE tables SET table_status = 'Occupied' WHERE table_id = ?`, [tableId]);
+                        processItems(currentOrderId);
+                    });
+                } else {
+                    db.run(`INSERT INTO orders (order_status, total_amount, table_id, staff_id) VALUES ('Pending', ?, ?, ?)`, 
+                    [newItemsTotal, tableId, staffId], function(err) {
+                        if (err) { db.run('ROLLBACK'); return reject(err); }
+                        const orderId = this.lastID;
+
+                        db.run(`UPDATE tables SET table_status = 'Occupied' WHERE table_id = ?`, [tableId]);
+                        processItems(orderId);
+                    });
+                }
             });
         });
     });
@@ -243,5 +256,5 @@ function processPaymentTransaction(tableId, orderId) {
 }
 
 module.exports = {
-    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction
+    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrUpdateOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction
 };
