@@ -49,7 +49,8 @@ function renderStaffTable(staff) {
         
         let startTime = "-";
         if (isClockedIn) {
-            const dateObj = new Date(person.clock_in + "Z");
+            const timeString = person.clock_in.replace(' ', 'T') + '+04:00';
+            const dateObj = new Date(timeString);
             startTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
@@ -70,7 +71,6 @@ function renderStaffTable(staff) {
     });
 }
 
-// --- Cookie Helper (Existing Logic) ---
 function getCookie(name) {
     const nameEQ = name + "=";
     const ca = document.cookie.split(';');
@@ -81,7 +81,6 @@ function getCookie(name) {
     return null;
 }
 
-// --- Clock Action (Existing Logic) ---
 async function handleClockAction() {
     const username = getCookie('current_user');
     
@@ -111,10 +110,14 @@ async function handleClockAction() {
     }
 }
 
-// --- NEW: REVENUE SUBPAGE LOGIC ---
 async function fetchOrderHistory() {
     const dateInput = document.getElementById('revenue-date-filter');
-    const selectedDate = dateInput.value || new Date().toISOString().split('T')[0];
+    
+    const now = new Date();
+    const dubaiTime = new Date(now.getTime() + (4 * 60 * 60 * 1000));
+    const defaultDate = dubaiTime.toISOString().split('T')[0];
+    
+    const selectedDate = dateInput.value || defaultDate;
     
     try {
         const res = await fetch(`/api/admin/orders?date=${selectedDate}`);
@@ -137,7 +140,6 @@ async function fetchOrderHistory() {
     }
 }
 
-// --- NEW: PROFIT & WASTAGE SUBPAGE LOGIC ---
 async function fetchProfitDetails() {
     try {
         const res = await fetch('/api/admin/profit-analytics');

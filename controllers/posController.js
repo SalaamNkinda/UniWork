@@ -2,9 +2,9 @@ const posModel = require('../models/posModel');
 
 exports.getFloorData = async (req, res) => {
     try {
-        const todayLocal = new Date();
-        const offset = todayLocal.getTimezoneOffset() * 60000;
-        const localISOTime = (new Date(todayLocal - offset)).toISOString().split('T')[0];
+        const nowUTC = new Date();
+        const dubaiNow = new Date(nowUTC.getTime() + (4 * 60 * 60 * 1000));
+        const localISOTime = dubaiNow.toISOString().split('T')[0];
         
         const selectedDate = req.query.date || localISOTime;
         
@@ -15,15 +15,12 @@ exports.getFloorData = async (req, res) => {
         tables.forEach(t => tablesMap[t.table_id] = t);
 
         if (selectedDate === localISOTime) {
-            const now = new Date();
             reservations.forEach(r => {
-                // Safely interpret stored time back to local
-                const resTime = new Date(r.reservation_time);
-                const diffMins = (resTime.getTime() - now.getTime()) / 60000;
+                const resTime = new Date(r.reservation_time); 
+                const diffMins = (resTime.getTime() - dubaiNow.getTime()) / 60000;
                 
                 // If reservation is happening in next 15 mins, or up to 2 hours into the reservation
                 if (diffMins <= 15 && diffMins >= -120) {
-                    // Only override if no one has physically placed an order ('Occupied') yet
                     if (tablesMap[r.table_id] && tablesMap[r.table_id].table_status === 'Empty') {
                         tablesMap[r.table_id].table_status = 'Reserved'; 
                     }

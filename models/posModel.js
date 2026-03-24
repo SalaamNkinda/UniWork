@@ -238,20 +238,27 @@ function getActiveTableOrder(tableId) {
 
 function processPaymentTransaction(tableId, orderId) {
     return new Promise((resolve, reject) => {
-        db.serialize(() => {
-            db.run('BEGIN TRANSACTION');
+        db.get(`SELECT order_status FROM orders WHERE order_id = ?`, [orderId], (err, row) => {
+            if (err) return reject(err);
+            if (!row) return reject(new Error("Order not found"));
             
-            // 1. Mark order as 'Paid'
-            db.run(`UPDATE orders SET order_status = 'Paid' WHERE order_id = ?`, [orderId], function(err) {
-                if (err) { db.run('ROLLBACK'); return reject(err); }
+            if (row.order_status !== 'Completed') {
+                return reject(new Error("Cannot process payment. The kitchen has not finished preparing this order."));
+            }
+
+            db.serialize(() => {
+                db.run('BEGIN TRANSACTION');
                 
-                // 2. Mark table as 'Empty'
-                db.run(`UPDATE tables SET table_status = 'Empty' WHERE table_id = ?`, [tableId], function(err) {
+                db.run(`UPDATE orders SET order_status = 'Paid' WHERE order_id = ?`, [orderId], function(err) {
                     if (err) { db.run('ROLLBACK'); return reject(err); }
                     
-                    db.run('COMMIT', (err) => {
+                    db.run(`UPDATE tables SET table_status = 'Empty' WHERE table_id = ?`, [tableId], function(err) {
                         if (err) { db.run('ROLLBACK'); return reject(err); }
-                        resolve();
+                        
+                        db.run('COMMIT', (err) => {
+                            if (err) { db.run('ROLLBACK'); return reject(err); }
+                            resolve();
+                        });
                     });
                 });
             });

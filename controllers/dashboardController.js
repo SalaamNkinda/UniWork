@@ -45,7 +45,10 @@ exports.getBusinessStats = async (req, res) => {
 
 exports.getOrderHistory = async (req, res) => {
     try {
-        const date = req.query.date || new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const dubaiTime = new Date(now.getTime() + (4 * 60 * 60 * 1000));
+        
+        const date = req.query.date || dubaiTime.toISOString().split('T')[0];
         const orders = await dashboardModel.getOrdersByDate(date);
         res.json({ success: true, orders });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }

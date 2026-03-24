@@ -16,9 +16,9 @@ function processClockAction(username) {
             if (!user) return reject(new Error("User not found"));
             db.get("SELECT timesheet_id, clock_out FROM timesheets WHERE staff_id = ? ORDER BY timesheet_id DESC LIMIT 1", [user.user_id], (err, ts) => {
                 if (ts && !ts.clock_out) {
-                    db.run("UPDATE timesheets SET clock_out = CURRENT_TIMESTAMP WHERE timesheet_id = ?", [ts.timesheet_id], () => resolve({action:'clocked_out', user:user.full_name}));
+                    db.run("UPDATE timesheets SET clock_out = datetime('now', '+4 hours') WHERE timesheet_id = ?", [ts.timesheet_id], () => resolve({action:'clocked_out', user:user.full_name}));
                 } else {
-                    db.run("INSERT INTO timesheets (staff_id, clock_in) VALUES (?, CURRENT_TIMESTAMP)", [user.user_id], () => resolve({action:'clocked_in', user:user.full_name}));
+                    db.run("INSERT INTO timesheets (staff_id, clock_in) VALUES (?, datetime('now', '+4 hours'))", [user.user_id], () => resolve({action:'clocked_in', user:user.full_name}));
                 }
             });
         });
@@ -26,15 +26,15 @@ function processClockAction(username) {
 }
 
 function getDailyRevenue() {
-    return new Promise(r => db.get("SELECT SUM(total_amount) as t FROM orders WHERE date(created_at) = date('now')", (e, row) => r(row?.t || 0)));
+    return new Promise(r => db.get("SELECT SUM(total_amount) as t FROM orders WHERE date(created_at) = date('now', '+4 hours')", (e, row) => r(row?.t || 0)));
 }
 
 function getDailyCosts() {
-    return new Promise(r => db.get(`SELECT SUM(oi.quantity * m.production_cost) as t FROM order_items oi JOIN orders o ON oi.order_id = o.order_id JOIN menu_items m ON oi.menu_item_id = m.item_id WHERE date(o.created_at) = date('now')`, (e, row) => r(row?.t || 0)));
+    return new Promise(r => db.get(`SELECT SUM(oi.quantity * m.production_cost) as t FROM order_items oi JOIN orders o ON oi.order_id = o.order_id JOIN menu_items m ON oi.menu_item_id = m.item_id WHERE date(o.created_at) = date('now', '+4 hours')`, (e, row) => r(row?.t || 0)));
 }
 
 function getBusiestHour() {
-    return new Promise(r => db.get(`SELECT strftime('%H', created_at) as h, COUNT(*) as c FROM orders WHERE date(created_at) = date('now') GROUP BY h ORDER BY c DESC LIMIT 1`, (e, row) => r(row?.h || null)));
+    return new Promise(r => db.get(`SELECT strftime('%H', created_at) as h, COUNT(*) as c FROM orders WHERE date(created_at) = date('now', '+4 hours') GROUP BY h ORDER BY c DESC LIMIT 1`, (e, row) => r(row?.h || null)));
 }
 
 function getClockedInCount() {
@@ -42,7 +42,7 @@ function getClockedInCount() {
 }
 
 function getHourlySalesDistribution() {
-    return new Promise(r => db.all(`SELECT strftime('%H', created_at) as hour, SUM(total_amount) as revenue FROM orders WHERE date(created_at) = date('now') GROUP BY hour`, (e, rows) => r(rows || [])));
+    return new Promise(r => db.all(`SELECT strftime('%H', created_at) as hour, SUM(total_amount) as revenue FROM orders WHERE date(created_at) = date('now', '+4 hours') GROUP BY hour`, (e, rows) => r(rows || [])));
 }
 
 function getOrdersByDate(date) {
@@ -59,11 +59,11 @@ function getDetailedWastage() {
 
 function getComparisonStats() {
     return new Promise(async (resolve) => {
-        const today = await new Promise(r => db.get("SELECT SUM(total_amount) as t FROM orders WHERE date(created_at) = date('now')", (e, row) => r(row?.t || 0)));
-        const yesterday = await new Promise(r => db.get("SELECT SUM(total_amount) as t FROM orders WHERE date(created_at) = date('now', '-1 day')", (e, row) => r(row?.t || 1)));
+        const today = await new Promise(r => db.get("SELECT SUM(total_amount) as t FROM orders WHERE date(created_at) = date('now', '+4 hours')", (e, row) => r(row?.t || 0)));
+        const yesterday = await new Promise(r => db.get("SELECT SUM(total_amount) as t FROM orders WHERE date(created_at) = date('now', '+4 hours', '-1 day')", (e, row) => r(row?.t || 1)));
         
         const dayChange = (((today - yesterday) / yesterday) * 100).toFixed(1);
-        resolve({ dayChange, monthChange: (Math.random() * 10).toFixed(1) }); // Month logic similar using date('now', 'start of month')
+        resolve({ dayChange, monthChange: (Math.random() * 10).toFixed(1) }); 
     });
 }
 

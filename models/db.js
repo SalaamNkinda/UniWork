@@ -70,7 +70,7 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS orders (
         order_id INTEGER PRIMARY KEY AUTOINCREMENT,
         order_status TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT (datetime('now', '+4 hours')),
         total_amount REAL,
         table_id INTEGER,
         staff_id INTEGER,
@@ -105,7 +105,7 @@ db.serialize(() => {
         log_id INTEGER PRIMARY KEY AUTOINCREMENT,
         quantity_wasted REAL,
         reason TEXT,
-        logged_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        logged_at DATETIME DEFAULT (datetime('now', '+4 hours')),
         ingredient_id INTEGER,
         FOREIGN KEY(ingredient_id) REFERENCES ingredients(ingredient_id)
     )`);

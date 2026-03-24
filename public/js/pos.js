@@ -2,6 +2,7 @@ let selectedTableId = null;
 let cart = [];
 let allMenuItems = [];
 let currentOrderId = null;
+let currentOrderStatus = null;
 
 // --- Initialize Flatpickr & Boot ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,9 +35,9 @@ function switchTab(tab) {
 function getSelectedDateStr() {
     let dateStr = document.getElementById('inline-calendar').value;
     if (!dateStr) {
-        const d = new Date();
-        const offset = d.getTimezoneOffset() * 60000;
-        dateStr = (new Date(d - offset)).toISOString().split('T')[0];
+        const now = new Date();
+        const dubaiTime = new Date(now.getTime() + (4 * 60 * 60 * 1000));
+        dateStr = dubaiTime.toISOString().split('T')[0];
     }
     return dateStr;
 }
@@ -103,8 +104,10 @@ async function selectTable(id, name) {
         if (data.success && data.order) {
             cart = data.order.items.map(item => ({...item, isSent: true})); 
             currentOrderId = data.order.order_id; 
+            currentOrderStatus = data.order.order_status;
         } else {
             cart = []; 
+            currentOrderStatus = null;
         }
         renderCart();
     } catch(err) { 
@@ -348,10 +351,12 @@ function renderKitchen(orders) {
     const container = document.getElementById('kds-container');
     container.innerHTML = '';
 
-    const now = new Date();
+    const now = new Date(); 
 
     orders.forEach(order => {
-        const orderTime = new Date(order.created_at + 'Z'); 
+        const timeString = order.created_at.replace(' ', 'T') + '+04:00';
+        const orderTime = new Date(timeString); 
+        
         const minsAgo = Math.floor((now - orderTime) / 60000); 
         
         const maxTime = order.max_time || 20; 
@@ -390,6 +395,15 @@ async function payOrder() {
     if (!selectedTableId) return alert("Please select a table first.");
     if (!currentOrderId) return alert("No active order. Send items to the kitchen first!");
 
+    const unsentItems = cart.filter(i => !i.isSent);
+    if (unsentItems.length > 0) {
+        return alert("You have unsent items in the cart! Send them to the kitchen or remove them before paying.");
+    }
+
+    if (currentOrderStatus !== 'Completed') {
+        return alert("Cannot process payment. The kitchen is still preparing this order!");
+    }
+
     if (!confirm("Confirm payment and clear the table?")) return;
 
     try {
@@ -405,6 +419,7 @@ async function payOrder() {
             cart = [];
             selectedTableId = null;
             currentOrderId = null;
+            currentOrderStatus = null;
             document.getElementById('pos-table-display').innerText = "Select a table from the Floor Plan first.";
             renderCart();
             goToTab('/pos.html', 'floor'); 
