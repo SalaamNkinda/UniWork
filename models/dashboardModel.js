@@ -53,7 +53,7 @@ function getOrdersByDate(date) {
 
 function getDetailedWastage() {
     return new Promise((resolve, reject) => {
-        db.all(`SELECT w.*, i.ingredient_name, i.unit, i.cost_per_unit FROM wastage w JOIN ingredients i ON w.ingredient_id = i.ingredient_id ORDER BY w.created_at DESC LIMIT 20`, (err, rows) => err ? reject(err) : resolve(rows));
+        db.all(`SELECT w.*, i.ingredient_name, i.unit, i.cost_per_unit FROM wastage_log w JOIN ingredients i ON w.ingredient_id = i.ingredient_id ORDER BY w.logged_at DESC LIMIT 20`, (err, rows) => err ? reject(err) : resolve(rows));
     });
 }
 

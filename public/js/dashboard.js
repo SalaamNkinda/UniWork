@@ -163,7 +163,7 @@ async function fetchProfitDetails() {
                     <td>${item.quantity_wasted} ${item.unit}</td>
                     <td>${item.reason}</td>
                     <td style="color: var(--danger)">-$${(item.quantity_wasted * item.cost_per_unit).toFixed(2)}</td>
-                    <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                    <td>${new Date(item.logged_at).toLocaleDateString()}</td>
                 </tr>
             `).join('');
         }
