@@ -164,3 +164,140 @@ window.addEventListener('DOMContentLoaded', () => {
     // Keep your existing staff loading call here too
     if (typeof loadStaff === 'function') loadStaff(); 
 });
+
+const db = require('./db');
+
+// --- 1. Order History with Date Filter ---
+function getOrderHistory(dateFilter) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT order_id, total_amount, strftime('%H:%M', created_at) as time, status 
+            FROM orders 
+            WHERE date(created_at) = date(?) 
+            ORDER BY created_at DESC`;
+        db.all(sql, [dateFilter], (err, rows) => err ? reject(err) : resolve(rows));
+    });
+}
+
+// --- 2. Wastage Logs for Profit Analysis ---
+function getWastageLogs() {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT w.log_id, i.ingredient_name, w.quantity_wasted, w.reason, 
+                   (w.quantity_wasted * i.unit_cost) as cost_impact,
+                   strftime('%Y-%m-%d', w.logged_at) as date
+            FROM wastage_log w
+            JOIN ingredients i ON w.ingredient_id = i.ingredient_id
+            ORDER BY w.logged_at DESC LIMIT 15`;
+        db.all(sql, [], (err, rows) => err ? reject(err) : resolve(rows));
+    });
+}
+
+// --- 3. Growth Comparisons (Today vs Yesterday / Month vs Last Month) ---
+async function getGrowthStats() {
+    const query = (sql, params = []) => new Promise((res) => db.get(sql, params, (err, row) => res(row?.total || 0)));
+
+    const today = await query("SELECT SUM(total_amount) as total FROM orders WHERE date(created_at) = date('now')");
+    const yesterday = await query("SELECT SUM(total_amount) as total FROM orders WHERE date(created_at) = date('now', '-1 day')");
+    const thisMonth = await query("SELECT SUM(total_amount) as total FROM orders WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')");
+    const lastMonth = await query("SELECT SUM(total_amount) as total FROM orders WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now', '-1 month')");
+
+    const calcDiff = (now, prev) => prev > 0 ? (((now - prev) / prev) * 100).toFixed(1) : (now > 0 ? 100 : 0);
+
+    return {
+        dayDiff: calcDiff(today, yesterday),
+        monthDiff: calcDiff(thisMonth, lastMonth)
+    };
+}
+
+// --- 4. 24-Hour Revenue Distribution ---
+function get24HourRevenue() {
+    return new Promise((resolve, reject) => {
+        // Uses a recursive CTE to ensure all 24 hours appear in the graph
+        const sql = `
+            WITH RECURSIVE hours(h) AS (SELECT 0 UNION ALL SELECT h+1 FROM hours WHERE h<23)
+            SELECT h as hour, IFNULL(SUM(o.total_amount), 0) as revenue
+            FROM hours
+            LEFT JOIN orders o ON strftime('%H', o.created_at) = printf('%02d', h) AND date(o.created_at) = date('now')
+            GROUP BY h ORDER BY h ASC`;
+        db.all(sql, [], (err, rows) => err ? reject(err) : resolve(rows));
+    });
+}
+
+module.exports = { 
+    ...module.exports, 
+    getOrderHistory, getWastageLogs, getGrowthStats, get24HourRevenue 
+};
+
+// --- Updated Navigation Logic ---
+function switchTab(tab) {
+    const sections = ['dashboard-section', 'roster-section', 'revenue-history-section', 'profit-analysis-section'];
+    sections.forEach(id => document.getElementById(id).classList.add('hidden'));
+    
+    const target = document.getElementById(`${tab}-section`);
+    if (target) target.classList.remove('hidden');
+
+    if (tab === 'revenue-history' || tab === 'profit-analysis') loadHistoryData();
+    if (tab === 'roster') fetchStaffData();
+}
+
+async function loadHistoryData() {
+    const date = document.getElementById('history-date-picker').value || new Date().toISOString().split('T')[0];
+    const res = await fetch(`/api/admin/history?date=${date}`);
+    const data = await res.json();
+
+    if (data.success) {
+        const orderTbody = document.querySelector('#order-history-table tbody');
+        orderTbody.innerHTML = data.orders.map(o => `
+            <tr><td>#${o.order_id}</td><td>${o.time}</td><td>$${o.total_amount}</td><td>${o.status}</td></tr>
+        `).join('');
+
+        const wasteTbody = document.querySelector('#wastage-table tbody');
+        wasteTbody.innerHTML = data.wastage.map(w => `
+            <tr><td>${w.ingredient_name}</td><td>${w.reason}</td><td style="color:var(--danger)">-$${w.cost_impact.toFixed(2)}</td><td>${w.date}</td></tr>
+        `).join('');
+    }
+}
+
+// --- Updated Business Stats Logic ---
+async function loadBusinessStats() {
+    const res = await fetch('/api/admin/stats/today');
+    const result = await res.json();
+
+    if (result.success) {
+        const { data } = result;
+        document.getElementById('revenue-val').innerText = `$${data.revenue}`;
+        document.getElementById('profit-val').innerText = `$${data.profit}`;
+        
+        // Growth Indicators
+        const growthEl = document.getElementById('growth-day-text');
+        growthEl.innerText = `${data.growth.dayDiff}% vs Yesterday`;
+        growthEl.style.color = data.growth.dayDiff >= 0 ? 'var(--success)' : 'var(--danger)';
+        
+        document.getElementById('growth-month-val').innerText = `${data.growth.monthDiff}%`;
+
+        if (data.chart) render24hChart(data.chart);
+    }
+}
+
+function render24hChart(chartData) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Revenue Growth ($)',
+                data: chartData.revenueData,
+                borderColor: '#3b82f6',
+                tension: 0.3,
+                fill: true,
+                backgroundColor: 'rgba(59, 130, 246, 0.1)'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: { x: { grid: { display: false } } }
+        }
+    });
+}

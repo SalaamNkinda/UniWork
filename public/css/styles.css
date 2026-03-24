@@ -356,3 +356,15 @@ h1 {
     height: 300px;
     margin-top: 20px;
 }
+
+/*styles for scrolling tables*/
+.scroll-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    background: white;
+}
+
+#profit-comparison.trend-up { color: var(--success); }
+#profit-comparison.trend-down { color: var(--danger); }

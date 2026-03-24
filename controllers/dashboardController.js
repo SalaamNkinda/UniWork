@@ -54,3 +54,40 @@ exports.getBusinessStats = async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to calculate business metrics.' });
     }
 };
+
+exports.getBusinessStats = async (req, res) => {
+    try {
+        const revenue = await dashboardModel.getDailyRevenue();
+        const costs = await dashboardModel.getDailyCosts();
+        const chartData = await dashboardModel.get24HourRevenue();
+        const growth = await dashboardModel.getGrowthStats();
+        const activeStaff = await dashboardModel.getClockedInCount();
+
+        res.json({
+            success: true,
+            data: {
+                revenue: revenue.toFixed(2),
+                profit: (revenue - costs).toFixed(2),
+                growth: growth,
+                staffActive: activeStaff,
+                chart: {
+                    labels: chartData.map(item => `${item.hour}:00`),
+                    revenueData: chartData.map(item => item.revenue)
+                }
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+exports.getHistoryData = async (req, res) => {
+    try {
+        const date = req.query.date || new Date().toISOString().split('T')[0];
+        const orders = await dashboardModel.getOrderHistory(date);
+        const wastage = await dashboardModel.getWastageLogs();
+        res.json({ success: true, orders, wastage });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};

@@ -305,4 +305,69 @@
     <script src="/js/dashboard.js"></script>
     <script src="/js/nav.js"></script>
 </body>
+<div id="dashboard-section" class="container hidden">
+    <h1>Admin Dashboard</h1>
+    <p class="subtitle">Click cards to view detailed history</p>
+    
+    <div class="stats-grid">
+        <div class="stat-card" onclick="switchTab('revenue-history')" style="cursor: pointer;">
+            <div class="stat-label">Daily Revenue</div>
+            <div class="stat-value" id="revenue-val">$0.00</div>
+            <div class="stat-sub" style="color: var(--navy);">View History →</div>
+        </div>
+        
+        <div class="stat-card" onclick="switchTab('profit-analysis')" style="cursor: pointer;">
+            <div class="stat-label">Net Profit</div>
+            <div class="stat-value" id="profit-val">$0.00</div>
+            <div class="stat-sub" id="growth-day-text" style="font-weight: bold;">Loading growth...</div>
+        </div>
+        
+        </div>
+
+    <div class="chart-container">
+        <h3>Revenue Trend (24h)</h3>
+        <div style="overflow-x: auto; white-space: nowrap; border: 1px solid var(--border); border-radius: 8px;">
+            <div style="width: 1200px; height: 350px; padding: 10px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="revenue-history-section" class="container hidden">
+    <div class="roster-header">
+        <h1>Order History</h1>
+        <input type="date" id="history-date-picker" class="form-input" style="width: 180px;" onchange="loadHistoryData()">
+    </div>
+    <div class="table-container">
+        <table id="order-history-table">
+            <thead>
+                <tr><th>ID</th><th>Time</th><th>Amount</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <button class="btn-clock" style="margin-top: 1rem;" onclick="switchTab('dashboard')">Back to Dashboard</button>
+</div>
+
+<div id="profit-analysis-section" class="container hidden">
+    <h1>Profit & Wastage Analysis</h1>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Monthly Growth</div>
+            <div class="stat-value" id="growth-month-val">0%</div>
+            <div class="stat-sub">Compared to last month</div>
+        </div>
+    </div>
+    <h3>Recent Kitchen Wastage</h3>
+    <div class="table-container">
+        <table id="wastage-table">
+            <thead>
+                <tr><th>Ingredient</th><th>Reason</th><th>Cost Impact</th><th>Date</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <button class="btn-clock" style="margin-top: 1rem;" onclick="switchTab('dashboard')">Back to Dashboard</button>
+</div>
 </html>

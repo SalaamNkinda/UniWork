@@ -104,7 +104,7 @@ function renderNavbar() {
                 <i class="fas fa-utensils mr-2"></i> Bald Gingers' Grill
             </h2>
             
-            <div class="nav-links" style="display: flex; flex-direction: column; flex-grow: 1; width: 100%; box-sizing: border-box; overflow-x: hidden;">
+            <div class="nav-links" style="display: flex; flex-direction: column; flex-grow: 1; width: 100p%; box-sizing: border-box; overflow-x: hidden;">
     `;
 
     // Only render buttons the role has access to

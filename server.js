@@ -51,6 +51,7 @@ app.post('/api/pos/reservations', posController.createReservation);
 app.get('/api/admin/staff', dashboardController.getStaff);
 app.post('/api/admin/clock', dashboardController.handleClockAction);
 app.get('/api/admin/stats/today', dashboardController.getBusinessStats);
+app.get('/api/admin/history', dashboardController.getHistoryData); 
 
 // Start Server
 const PORT = 3000;
