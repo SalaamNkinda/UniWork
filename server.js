@@ -28,6 +28,7 @@ app.post('/api/login', authController.handleLogin);
 app.get('/api/inventory/ingredients', inventoryController.listIngredients);
 app.post('/api/inventory/ingredients', inventoryController.addNewIngredient);
 app.put('/api/inventory/ingredients/:id', inventoryController.updateStock);
+app.put('/api/inventory/ingredients/:id/restock', inventoryController.restockItem);
 app.delete('/api/inventory/ingredients/:id', inventoryController.removeIngredient);
 
 app.get('/api/inventory/alerts', inventoryController.checkAlerts);

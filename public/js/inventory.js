@@ -37,6 +37,9 @@ export async function fetchIngredients() {
                             </span>
                         </td>
                         <td style="text-align: center;">
+                            <button onclick="openRestockModal(${item.ingredient_id}, '${item.ingredient_name.replace(/'/g, "\\'")}', '${item.unit}')" class="btn" style="background-color: var(--blue-100); color: var(--blue-700); padding: 0.25rem 0.5rem; margin-right: 0.5rem; border-radius: 4px;">
+                                <i class="fas fa-plus" style="margin-right: 0.3rem;"></i> Add
+                            </button>
                             <button onclick="deleteIng(${item.ingredient_id})" class="btn-danger-text">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -250,18 +253,52 @@ export async function handleLogWastage(event) {
     }
 }
 
+export function openRestockModal(id, name, unit) {
+    document.getElementById('restock_id').value = id;
+    document.getElementById('restock-ing-name').innerText = name;
+    document.getElementById('restock-unit').innerText = unit;
+    document.getElementById('restock_qty').value = '';
+    toggleModal('restock-modal');
+}
+
+export async function handleRestock(event) {
+    event.preventDefault();
+    const id = document.getElementById('restock_id').value;
+    const qty = document.getElementById('restock_qty').value;
+
+    try {
+        const res = await fetch(`/api/inventory/ingredients/${id}/restock`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity: qty })
+        });
+        const data = await res.json();
+        
+        if(data.success) {
+            toggleModal('restock-modal');
+            fetchIngredients(); // Automatically re-fetches and sorts!
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch(err) {
+        console.error(err);
+    }
+}
+
 // --- Attach to Window ---
 window.showSection = showSection;
 window.toggleModal = toggleModal;
 window.deleteIng = deleteIng;
 window.addIngredientRow = addIngredientRow;
 window.calculatePreview = calculatePreview;
+window.openRestockModal = openRestockModal;
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchIngredients();
     
     // Attach form submit listeners
     document.getElementById('add-ingredient-form')?.addEventListener('submit', handleAddIngredient);
+    document.getElementById('restock-form')?.addEventListener('submit', handleRestock);
     document.getElementById('recipe-form')?.addEventListener('submit', handleSaveRecipe);
     document.getElementById('wastage-form')?.addEventListener('submit', handleLogWastage);
     

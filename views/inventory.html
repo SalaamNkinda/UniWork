@@ -324,6 +324,23 @@
             </form>
         </div>
     </div>
+    
+    <div id="restock-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Add Stock: <span id="restock-ing-name" style="color: var(--blue-600);"></span></h3>
+            <form id="restock-form">
+                <input type="hidden" id="restock_id">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label">Quantity to Add (<span id="restock-unit"></span>)</label>
+                    <input type="number" id="restock_qty" class="form-input" min="0.01" step="0.01" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="toggleModal('restock-modal')" class="btn" style="color: var(--gray-500); background:none;">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script type="module" src="/js/inventory.js"></script>
     <script src="/js/nav.js"></script>

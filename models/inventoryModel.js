@@ -1,25 +1,5 @@
-/**
- * inventoryModel.js
- * Handles all database queries for Atif's "Inventory & Menu Manager"
- * Covers: Ingredients, Menu Items, Recipes, and Wastage Logging
- *
- * Schema source: models/db.js
- * Tables used:
- *   - ingredients       (ingredient_id, ingredient_name, stock_level, unit, cost_per_unit, low_stock_threshold, stock_level_status, supplier)
- *   - menu_items        (item_id, dish_name, category, selling_price, production_cost, estimated_time)
- *   - recipes           (recipe_id, item_id FK, ingredient_id FK, quantity)
- *   - wastage_log       (log_id, quantity_wasted, reason, logged_at, ingredient_id FK)
- */
-
 const db = require('../models/db');
 
-// SECTION 1: INGREDIENT CRUD
-
-/**
- * Fetches all ingredients from the database.
- * Used to populate the Ingredients Page list.
- * @returns {Promise<Array>} Array of all ingredient rows
- */
 function getAllIngredients() {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -33,7 +13,9 @@ function getAllIngredients() {
         stock_level_status,
         supplier
       FROM ingredients
-      ORDER BY ingredient_name ASC
+      ORDER BY 
+        CASE WHEN stock_level <= low_stock_threshold THEN 0 ELSE 1 END ASC,
+        ingredient_name ASC
     `;
     db.all(sql, [], (err, rows) => {
       if (err) return reject(new Error(`getAllIngredients failed: ${err.message}`));
@@ -42,18 +24,6 @@ function getAllIngredients() {
   });
 }
 
-/**
- * Inserts a new raw ingredient into the Ingredients table.
- * Also sets Stock_level_status based on the provided thresholds.
- * @param {Object} data - Ingredient fields
- * @param {string} data.Ingredient_name
- * @param {number} data.Stock_level
- * @param {string} data.Unit            - e.g. 'grams', 'litres', 'units'
- * @param {number} data.Cost_per_unit
- * @param {number} data.Low_stock_threshold
- * @param {string} data.Supplier
- * @returns {Promise<Object>} The newly created ingredient's ID
- */
 function addIngredient(data) {
   return new Promise((resolve, reject) => {
     const {
@@ -91,13 +61,6 @@ function addIngredient(data) {
   });
 }
 
-/**
- * Updates an existing ingredient's details (price, supplier, stock, etc.).
- * Re-evaluates Stock_level_status after the update.
- * @param {number} id   - ingredient_id of the row to update
- * @param {Object} data - Fields to update (same shape as addIngredient)
- * @returns {Promise<Object>} Confirmation of rows changed
- */
 function updateIngredient(id, data) {
   return new Promise((resolve, reject) => {
     const {
@@ -142,12 +105,6 @@ function updateIngredient(id, data) {
   });
 }
 
-/**
- * Deletes an ingredient by its primary key.
- * Note: Ensure no active Recipes reference this ingredient before calling.
- * @param {number} id - ingredient_id to remove
- * @returns {Promise<Object>} Confirmation of deletion
- */
 function deleteIngredient(id) {
   return new Promise((resolve, reject) => {
     const sql = `DELETE FROM ingredients WHERE ingredient_id = ?`;
@@ -160,13 +117,6 @@ function deleteIngredient(id) {
   });
 }
 
-// SECTION 2: LOW STOCK LOGIC
-
-/**
- * Returns all ingredients where Stock_level has fallen at or below
- * the Low_stock_threshold — used to populate the red-row alerts on the UI.
- * @returns {Promise<Array>} Array of low-stock ingredient rows
- */
 function getLowStockItems() {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -188,25 +138,6 @@ function getLowStockItems() {
   });
 }
 
-// SECTION 3: RECIPE & MENU MANAGEMENT
-
-/**
- * Creates a menu item and links it to its ingredients in a single
- * atomic transaction. If any step fails, the entire operation is
- * rolled back to keep data consistent.
- *
- * @param {Object} itemData - Menu item fields
- * @param {string} itemData.dish_name        - Display name, e.g. "Margherita Pizza"
- * @param {string} itemData.category         - e.g. "Pizza", "Drinks"
- * @param {number} itemData.selling_price    - Price shown to customers
- * @param {number} itemData.estimated_time   - Prep time in minutes
- *
- * @param {Array<Object>} recipeIngredients  - Ingredient links for the Recipes table
- * @param {number} recipeIngredients[].ingredient_id
- * @param {number} recipeIngredients[].quantity  - Amount used per dish (in the ingredient's Unit)
- *
- * @returns {Promise<Object>} The new item_id and a success message
- */
 function createMenuItem(itemData, recipeIngredients) {
   return new Promise((resolve, reject) => {
     const { dish_name, category, selling_price, estimated_time } = itemData;
@@ -288,14 +219,6 @@ function createMenuItem(itemData, recipeIngredients) {
   });
 }
 
-/**
- * Calculates the total ingredient cost for a menu item by joining
- * Recipes with Ingredients and summing (quantity * Cost_per_unit).
- * Used for the auto-costing feature on the Recipe Builder page.
- *
- * @param {number} menuItemId - The Item_id from Menu_items
- * @returns {Promise<number>} The computed production cost (rounded to 2 dp)
- */
 function calculateProductionCost(menuItemId) {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -314,17 +237,6 @@ function calculateProductionCost(menuItemId) {
   });
 }
 
-// SECTION 4: WASTAGE HANDLING
-
-/**
- * Logs a wastage event and decrements the ingredient's Stock_level
- * in a single atomic transaction. Also re-evaluates Stock_level_status.
- *
- * @param {number} ingredientId   - The ingredient_id affected
- * @param {number} quantity       - Amount wasted (in the ingredient's Unit)
- * @param {string} reason         - Human-readable reason (e.g. "Dropped", "Spoiled")
- * @returns {Promise<Object>}     - The new log_id and updated stock level
- */
 function logWastage(ingredientId, quantity, reason) {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
@@ -398,19 +310,34 @@ function logWastage(ingredientId, quantity, reason) {
   });
 }
 
-// EXPORTS
+function addStock(ingredientId, addedQuantity) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            UPDATE ingredients
+            SET
+                stock_level = stock_level + ?,
+                stock_level_status = CASE 
+                                       WHEN (stock_level + ?) <= low_stock_threshold THEN 'LOW' 
+                                       ELSE 'OK' 
+                                     END
+            WHERE ingredient_id = ?
+        `;
+        db.run(sql, [addedQuantity, addedQuantity, ingredientId], function (err) {
+            if (err) return reject(new Error(`addStock failed: ${err.message}`));
+            if (this.changes === 0) return reject(new Error(`Ingredient with ID ${ingredientId} not found.`));
+            resolve({ changes: this.changes, message: 'Stock added successfully.' });
+        });
+    });
+}
 
 module.exports = {
-  // Ingredients CRUD
   getAllIngredients,
   addIngredient,
   updateIngredient,
   deleteIngredient,
-  // Low Stock
   getLowStockItems,
-  // Menu & Recipes
   createMenuItem,
   calculateProductionCost,
-  // Wastage
   logWastage,
+  addStock,
 };
