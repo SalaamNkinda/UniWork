@@ -66,8 +66,7 @@ function verifyAdminPassword(password) {
         // Hash the typed password using SHA-256 (matches your auth.js logic)
         const hashedPass = crypto.createHash('sha256').update(password.toString()).digest('hex');
 
-        // Check if a user exists with this password who is an admin
-        db.get("SELECT * FROM users WHERE hashed_password = ? AND role = 'admin'", [hashedPass], (err, row) => {
+        db.get("SELECT * FROM users WHERE password_hash = ? AND role = 'admin'", [hashedPass], (err, row) => {
             if (err) return reject(err);
             resolve(!!row); // Returns true if authorized, false if not
         });
