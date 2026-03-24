@@ -200,6 +200,49 @@ function markOrderCompleted(orderId) {
     });
 }
 
+function getActiveTableOrder(tableId) {
+    return new Promise((resolve, reject) => {
+        db.get(`SELECT * FROM orders WHERE table_id = ? AND order_status IN ('Pending', 'Completed') ORDER BY order_id DESC LIMIT 1`, [tableId], (err, order) => {
+            if (err) return reject(err);
+            if (!order) return resolve(null); // No active order
+            
+            db.all(`
+                SELECT oi.menu_item_id as item_id, m.dish_name as name, m.selling_price, oi.quantity 
+                FROM order_items oi
+                JOIN menu_items m ON oi.menu_item_id = m.item_id
+                WHERE oi.order_id = ?
+            `, [order.order_id], (err, items) => {
+                if (err) return reject(err);
+                order.items = items;
+                resolve(order);
+            });
+        });
+    });
+}
+
+function processPaymentTransaction(tableId, orderId) {
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run('BEGIN TRANSACTION');
+            
+            // 1. Mark order as 'Paid'
+            db.run(`UPDATE orders SET order_status = 'Paid' WHERE order_id = ?`, [orderId], function(err) {
+                if (err) { db.run('ROLLBACK'); return reject(err); }
+                
+                // 2. Mark table as 'Empty'
+                db.run(`UPDATE tables SET table_status = 'Empty' WHERE table_id = ?`, [tableId], function(err) {
+                    if (err) { db.run('ROLLBACK'); return reject(err); }
+                    
+                    db.run('COMMIT', (err) => {
+                        if (err) { db.run('ROLLBACK'); return reject(err); }
+                        resolve();
+                    });
+                });
+            });
+        });
+    });
+}
+
 module.exports = {
-    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrderTransaction, getKitchenOrders, markOrderCompleted
+    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction
 };

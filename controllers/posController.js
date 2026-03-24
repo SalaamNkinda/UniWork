@@ -103,3 +103,24 @@ exports.completeOrder = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+exports.getTableOrder = async (req, res) => {
+    try {
+        const order = await posModel.getActiveTableOrder(req.params.id);
+        res.json({ success: true, order });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+exports.processPayment = async (req, res) => {
+    try {
+        const { tableId, orderId } = req.body;
+        if (!tableId || !orderId) return res.status(400).json({ success: false, message: "Missing table or order ID" });
+
+        await posModel.processPaymentTransaction(tableId, orderId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};

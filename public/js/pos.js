@@ -1,7 +1,7 @@
-// public/js/pos.js
 let selectedTableId = null;
 let cart = [];
 let allMenuItems = [];
+let currentOrderId = null;
 
 // --- Initialize Flatpickr & Boot ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -92,9 +92,26 @@ function renderReservations(resList) {
     });
 }
 
-function selectTable(id, name) {
+async function selectTable(id, name) {
     selectedTableId = id;
+    currentOrderId = null; // Reset when switching tables
     document.getElementById('pos-table-display').innerText = `Ordering for: ${name}`;
+    
+    try {
+        const res = await fetch(`/api/pos/table/${id}/order`);
+        const data = await res.json();
+        
+        if (data.success && data.order) {
+            cart = data.order.items; 
+            currentOrderId = data.order.order_id; // Capture the active order ID
+        } else {
+            cart = []; 
+        }
+        renderCart();
+    } catch(err) { 
+        console.error("Error fetching table order:", err); 
+    }
+
     switchTab('pos');
 }
 
@@ -330,4 +347,34 @@ async function markDone(orderId) {
         const data = await res.json();
         if(data.success) fetchKitchenData(); 
     } catch(err) { console.error(err); }
+}
+
+async function payOrder() {
+    if (!selectedTableId) return alert("Please select a table first.");
+    if (!currentOrderId) return alert("No active order. Send items to the kitchen first!");
+
+    if (!confirm("Confirm payment and clear the table?")) return;
+
+    try {
+        const res = await fetch('/api/pos/pay', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tableId: selectedTableId, orderId: currentOrderId })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+            alert("Payment successful! Table is now free.");
+            cart = [];
+            selectedTableId = null;
+            currentOrderId = null;
+            document.getElementById('pos-table-display').innerText = "Select a table from the Floor Plan first.";
+            renderCart();
+            switchTab('floor'); // Refreshes floor plan, turning the table green
+        } else {
+            alert("Payment failed: " + data.message);
+        }
+    } catch(err) { 
+        console.error(err); 
+    }
 }

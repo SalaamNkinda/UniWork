@@ -40,6 +40,8 @@ app.get('/api/pos/floor', posController.getFloorData);
 app.get('/api/pos/menu', posController.getMenu);
 app.post('/api/pos/verify-pin', posController.verifyPin);
 app.post('/api/pos/order', posController.placeOrder);
+app.get('/api/pos/table/:id/order', posController.getTableOrder);
+app.post('/api/pos/pay', posController.processPayment);
 
 app.get('/api/pos/kitchen', posController.getKitchenData);
 app.put('/api/pos/kitchen/:id/done', posController.completeOrder);
@@ -47,6 +49,7 @@ app.post('/api/pos/reservations', posController.createReservation);
 
 app.get('/api/admin/staff', dashboardController.getStaff);
 app.post('/api/admin/clock', dashboardController.handleClockAction);
+app.get('/api/admin/stats/today', dashboardController.getBusinessStats);
 
 // Start Server
 const PORT = 3000;
