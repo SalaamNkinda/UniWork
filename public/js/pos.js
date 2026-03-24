@@ -111,7 +111,7 @@ async function selectTable(id, name) {
         console.error("Error fetching table order:", err); 
     }
 
-    switchTab('pos');
+    goToTab('/pos.html', 'pos'); // Switch to POS tab after selecting a table
 }
 
 async function openBookingModal() {
@@ -246,7 +246,7 @@ async function sendToKitchen() {
             selectedTableId = null;
             document.getElementById('pos-table-display').innerText = "Select a table from the Floor Plan first.";
             renderCart();
-            switchTab('floor'); 
+            goToTab('/pos.html', 'floor'); 
         } else {
             alert('Error: ' + data.message);
         }
@@ -369,7 +369,7 @@ async function payOrder() {
             currentOrderId = null;
             document.getElementById('pos-table-display').innerText = "Select a table from the Floor Plan first.";
             renderCart();
-            switchTab('floor'); // Refreshes floor plan, turning the table green
+            goToTab('/pos.html', 'floor'); 
         } else {
             alert("Payment failed: " + data.message);
         }

@@ -4,24 +4,15 @@ exports.getStaff = async (req, res) => {
     try {
         const staff = await dashboardModel.getStaffStatus();
         res.json({ success: true, staff });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
 exports.handleClockAction = async (req, res) => {
     try {
         const { username } = req.body;
-        if (!username) return res.status(400).json({ success: false, message: "Username is required." });
-
         const result = await dashboardModel.processClockAction(username);
         res.json({ success: true, action: result.action, user: result.user });
-    } catch (err) {
-        if (err.message === "User not found") {
-            return res.status(401).json({ success: false, message: err.message });
-        }
-        res.status(500).json({ success: false, message: err.message });
-    }
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
 exports.getBusinessStats = async (req, res) => {
@@ -49,8 +40,21 @@ exports.getBusinessStats = async (req, res) => {
                 }
             }
         });
-    } catch (err) {
-        console.error('Dashboard Stats Error:', err);
-        res.status(500).json({ success: false, error: 'Failed to calculate business metrics.' });
-    }
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.getOrderHistory = async (req, res) => {
+    try {
+        const date = req.query.date || new Date().toISOString().split('T')[0];
+        const orders = await dashboardModel.getOrdersByDate(date);
+        res.json({ success: true, orders });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};
+
+exports.getProfitAnalytics = async (req, res) => {
+    try {
+        const comparisons = await dashboardModel.getComparisonStats();
+        const wastage = await dashboardModel.getDetailedWastage();
+        res.json({ success: true, data: { comparisons, wastage } });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
