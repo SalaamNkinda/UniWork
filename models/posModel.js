@@ -259,6 +259,78 @@ function processPaymentTransaction(tableId, orderId) {
     });
 }
 
+function voidActiveOrder(orderId, tableId) {
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run('BEGIN TRANSACTION');
+
+            // 1. Fetch ALL items to determine what gets refunded vs. what goes to waste
+            db.all(`
+                SELECT oi.production_status, oi.menu_item_id, oi.quantity as order_qty, r.ingredient_id, r.quantity as recipe_qty
+                FROM order_items oi
+                JOIN recipes r ON oi.menu_item_id = r.item_id
+                WHERE oi.order_id = ?
+            `, [orderId], (err, items) => {
+                if (err) { db.run('ROLLBACK'); return reject(err); }
+
+                let inventoryPromises = [];
+
+                items.forEach(item => {
+                    const totalIngredientAmount = item.order_qty * item.recipe_qty;
+
+                    if (item.production_status === 'In Progress') {
+                        // A. The kitchen hasn't cooked it yet. Refund back to stock.
+                        inventoryPromises.push(new Promise((res, rej) => {
+                            db.run(`
+                                UPDATE ingredients 
+                                SET stock_level = stock_level + ?,
+                                    stock_level_status = CASE WHEN (stock_level + ?) <= low_stock_threshold THEN 'LOW' ELSE 'OK' END
+                                WHERE ingredient_id = ?
+                            `, [totalIngredientAmount, totalIngredientAmount, item.ingredient_id], err => {
+                                if (err) return rej(err);
+                                res();
+                            });
+                        }));
+                    } else if (item.production_status === 'Completed') {
+                        // B. The kitchen already cooked it! It's wasted. Send to wastage_log.
+                        inventoryPromises.push(new Promise((res, rej) => {
+                            db.run(`
+                                INSERT INTO wastage_log (ingredient_id, quantity_wasted, reason)
+                                VALUES (?, ?, 'Order voided after kitchen preparation')
+                            `, [item.ingredient_id, totalIngredientAmount], err => {
+                                if (err) return rej(err);
+                                res();
+                            });
+                        }));
+                    }
+                });
+
+                // Wait for all refunds and wastage logs to finish before closing out the order
+                Promise.all(inventoryPromises).then(() => {
+                    // 3. Mark the overall order as voided
+                    db.run(`UPDATE orders SET order_status = 'Voided' WHERE order_id = ?`, [orderId], err => {
+                        if (err) { db.run('ROLLBACK'); return reject(err); }
+                        
+                        // 4. Free up the table
+                        db.run(`UPDATE tables SET table_status = 'Empty' WHERE table_id = ?`, [tableId], err => {
+                            if (err) { db.run('ROLLBACK'); return reject(err); }
+                            
+                            db.run('COMMIT', err => {
+                                if (err) { db.run('ROLLBACK'); return reject(err); }
+                                resolve();
+                            });
+                        });
+                    });
+                }).catch(err => {
+                    db.run('ROLLBACK');
+                    reject(err);
+                });
+            });
+        });
+    });
+}
+
+
 module.exports = {
-    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrUpdateOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction
+    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrUpdateOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction, voidActiveOrder
 };

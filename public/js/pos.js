@@ -279,30 +279,53 @@ function getRoleCookie() {
 async function voidOrder() {
     const role = getRoleCookie();
 
-    // 1. If they are already logged in as Admin, void it instantly
-    if (role === 'admin') {
+    const executeVoid = async () => {
+        if (currentOrderId) {
+            try {
+                const res = await fetch(`/api/pos/order/${currentOrderId}/void`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tableId: selectedTableId })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    return alert('Error voiding order in database: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                return alert('Network error while voiding.');
+            }
+        }
+            
         cart = [];
+        currentOrderId = null;
+        selectedTableId = null;
+        document.getElementById('pos-table-display').innerText = "Select a table from the Floor Plan first.";
         renderCart();
-        alert("Order voided successfully (Admin Override).");
-        return;
+         
+        goToTab('/pos.html', 'floor'); 
+        alert("Order voided successfully.");
+    };
+
+    // 1. Admin Auto-Override
+    if (role === 'admin') {
+        return executeVoid();
     }
 
-    // 2. If a Waiter is logged in, ask for an Admin password
+    // 2. Waiter requires Manager Password
     const password = prompt("Manager override required. Enter Admin Password:");
     if (!password) return;
 
     try {
-        const res = await fetch('/api/pos/verify-pin', { // You can rename this route later if you want
+        const res = await fetch('/api/pos/verify-pin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: password }) // Sending password instead of pin
+            body: JSON.stringify({ password: password }) 
         });
         const data = await res.json();
         
         if (data.success && data.isValid) {
-            cart = [];
-            renderCart();
-            alert("Order voided successfully.");
+            executeVoid();
         } else {
             alert("Invalid Password. Only Admins can void orders.");
         }

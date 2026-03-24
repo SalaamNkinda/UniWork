@@ -44,13 +44,14 @@ app.post('/api/pos/pay', posController.processPayment);
 app.get('/api/pos/kitchen', posController.getKitchenData);
 app.put('/api/pos/kitchen/:id/done', posController.completeOrder);
 app.post('/api/pos/reservations', posController.createReservation);
+app.post('/api/pos/order/:id/void', posController.voidOrder);
 
 // Admin/Dashboard
 app.get('/api/admin/staff', dashboardController.getStaff);
 app.post('/api/admin/clock', dashboardController.handleClockAction);
 app.get('/api/admin/stats/today', dashboardController.getBusinessStats);
-app.get('/api/admin/orders', dashboardController.getOrderHistory); // NEW: Order history for revenue subpage
-app.get('/api/admin/profit-analytics', dashboardController.getProfitAnalytics); // NEW: Profit & Wastage details
+app.get('/api/admin/orders', dashboardController.getOrderHistory);
+app.get('/api/admin/profit-analytics', dashboardController.getProfitAnalytics);
 
 // Start Server
 const PORT = 3000;

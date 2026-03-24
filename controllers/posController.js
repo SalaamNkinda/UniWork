@@ -125,3 +125,17 @@ exports.processPayment = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+exports.voidOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { tableId } = req.body;
+        
+        if (!tableId) return res.status(400).json({ success: false, message: "Missing table ID" });
+
+        await posModel.voidActiveOrder(id, tableId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
