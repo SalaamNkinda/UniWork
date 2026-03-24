@@ -98,7 +98,7 @@ function renderNavbar() {
     if (!navContainer) return;
 
     let navHTML = `
-        <nav class="sidebar-nav" style="background-color: #3b82f6; color: white; width: 250px; height: 100vh; padding: 2rem 0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; box-sizing: border-box; z-index: 1000; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
+        <nav class="sidebar-nav" style="background-color: #c74006; color: white; width: 250px; height: 100vh; padding: 2rem 0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; box-sizing: border-box; z-index: 1000; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
             
             <h2 style="margin: 0 0 2.5rem 0; font-size: 1.25rem; text-align: left; padding: 0 1.5rem;">
                 <i class="fas fa-utensils mr-2"></i> Salaam's Grill
