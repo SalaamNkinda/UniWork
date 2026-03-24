@@ -143,7 +143,7 @@ function createOrUpdateOrderTransaction(tableId, staffId, cartItems, currentOrde
                 };
 
                 if (currentOrderId) {
-                    db.run(`UPDATE orders SET total_amount = total_amount + ? WHERE order_id = ?`, 
+                    db.run(`UPDATE orders SET total_amount = total_amount + ?, order_status = 'Pending' WHERE order_id = ?`,
                     [newItemsTotal, currentOrderId], function(err) {
                         if (err) { db.run('ROLLBACK'); return reject(err); }
                         
@@ -174,7 +174,7 @@ function getKitchenOrders() {
             JOIN tables t ON o.table_id = t.table_id
             JOIN order_items oi ON o.order_id = oi.order_id
             JOIN menu_items m ON oi.menu_item_id = m.item_id
-            WHERE o.order_status = 'Pending'
+            WHERE o.order_status = 'Pending' AND oi.production_status = 'In Progress'
             ORDER BY o.created_at ASC
         `;
         db.all(sql, [], (err, rows) => {
@@ -205,9 +205,13 @@ function getKitchenOrders() {
 
 function markOrderCompleted(orderId) {
     return new Promise((resolve, reject) => {
-        db.run(`UPDATE orders SET order_status = 'Completed' WHERE order_id = ?`, [orderId], function(err) {
+        db.run(`UPDATE order_items SET production_status = 'Completed' WHERE order_id = ? AND production_status = 'In Progress'`, [orderId], function(err) {
             if (err) return reject(err);
-            resolve(this.changes);
+            
+            db.run(`UPDATE orders SET order_status = 'Completed' WHERE order_id = ?`, [orderId], function(err) {
+                if (err) return reject(err);
+                resolve(this.changes);
+            });
         });
     });
 }
