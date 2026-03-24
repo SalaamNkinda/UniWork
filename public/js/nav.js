@@ -136,7 +136,7 @@ function renderNavbar() {
                 <button onclick="logout()" 
                         onmouseover="this.style.opacity='1'" 
                         onmouseout="this.style.opacity='0.8'"
-                        style="background: none; border: none; color: #fecaca; cursor: pointer; font-size: 1rem; text-align: left; width: 100%; padding: 0.5rem 0; opacity: 0.8; transition: opacity 0.2s; outline: none;">
+                        style="background: none; border: none; color:rgb(249, 249, 249); cursor: pointer; font-size: 1rem; text-align: left; width: 100%; padding: 0.5rem 0; opacity: 0.8; transition: opacity 0.2s; outline: none;">
                     <i class="fas fa-sign-out-alt mr-2"></i> Logout
                 </button>
             </div>
