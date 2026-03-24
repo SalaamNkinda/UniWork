@@ -59,7 +59,6 @@ function renderTables(tables) {
     
     tables.forEach((table) => {
         let statusClass = 'status-empty';
-        if (table.table_status === 'Seated') statusClass = 'status-seated';
         if (table.table_status === 'Occupied') statusClass = 'status-occupied';
         if (table.table_status === 'Reserved') statusClass = 'status-reserved'; // For 15-min logic
 
