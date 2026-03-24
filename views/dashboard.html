@@ -239,17 +239,17 @@
 
     <div id="navbar-container"></div>
 
-    <div id="dashboard-section" class="container hidden">
+    <div id="dashboard-section" class="container">
         <h1>Admin Dashboard</h1>
         <p class="subtitle">Business intelligence and overview</p>
         
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="switchTab('revenue')">
                 <div class="stat-label">Daily Revenue</div>
                 <div class="stat-value" id="revenue-val">$0.00</div>
             </div>
             
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="switchTab('profit')">
                 <div class="stat-label">Net Profit</div>
                 <div class="stat-value" id="profit-val">$0.00</div>
                 <div class="stat-sub" id="margin-val" style="color: var(--success);">0% Margin</div>
@@ -260,7 +260,7 @@
                 <div class="stat-value" id="busy-val">--:--</div>
             </div>
             
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="switchTab('roster')">
                 <div class="stat-label">Staff On-Duty</div>
                 <div class="stat-value" id="staff-val">0</div>
             </div>
@@ -268,14 +268,76 @@
 
         <div class="chart-container">
             <h3>Revenue Growth (Today)</h3>
-            <div class="canvas-wrapper">
-                <canvas id="revenueChart"></canvas>
+            <div class="scroll-wrapper" style="overflow-x: auto; width: 100%;">
+                <div class="canvas-wrapper" style="width: 1200px; height: 350px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="roster-section" class="container">
+    <div id="revenue-section" class="container hidden">
+        <button class="btn-clock" onclick="switchTab('dashboard')" style="margin-bottom: 1rem; background-color: var(--muted); color: var(--foreground);">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+        <h1>Daily Revenue History</h1>
+        <div class="roster-header">
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <label style="color: white; font-weight: 600;">Filter by Date:</label>
+                <input type="date" id="revenue-date-filter" onchange="fetchOrderHistory()" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border);">
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Time</th>
+                        <th>Table</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="order-history-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="profit-section" class="container hidden">
+        <button class="btn-clock" onclick="switchTab('dashboard')" style="margin-bottom: 1rem; background-color: var(--muted); color: var(--foreground);">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+        <h1>Net Profit Analytics</h1>
         
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Today vs Yesterday</div>
+                <div class="stat-value" id="day-comp-val">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">This Month vs Last</div>
+                <div class="stat-value" id="month-comp-val">0%</div>
+            </div>
+        </div>
+
+        <h3 style="color: white; margin-top: 2rem;">Wastage Log</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Quantity Wasted</th>
+                        <th>Reason</th>
+                        <th>Estimated Cost Impact</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="wastage-history-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="roster-section" class="container">
         <div class="roster-header">
             <div>
                 <h1>Staff Roster & Time Clock</h1>
@@ -298,9 +360,12 @@
                     </tr>
                 </thead>
                 <tbody id="staff-table-body">
-                    </tbody>
+                </tbody>
             </table>
         </div>
+        <button class="btn-clock" onclick="switchTab('dashboard')" style="margin-top: 1.5rem; background-color: var(--muted); color: var(--foreground);">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
     </div>
 
     <script src="/js/dashboard.js"></script>
