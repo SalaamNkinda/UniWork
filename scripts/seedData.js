@@ -13,11 +13,13 @@ db.get("SELECT count(*) as count FROM users", (err, row) => {
         const insertUser = `INSERT INTO users (full_name, username, role, password_hash, hourly_rate) VALUES (?, ?, ?, ?, ?)`;
 
         // Using Employee IDs (e.g., admin, waiter1, chef1) as the username
-        db.run(insertUser, ['Majid', 'admin', 'admin', hashPin('1111'), 25.0]);
-        db.run(insertUser, ['Salaam', 'waiter', 'waiter', hashPin('2222'), 15.0]);
+        db.run(insertUser, ['Salaam', 'admin', 'admin', hashPin('1111'), 25.0]);
+        db.run(insertUser, ['Qais', 'waiter', 'waiter', hashPin('2222'), 15.0]);
+        db.run(insertUser, ['Sharon', 'waiter2', 'waiter', hashPin('2123'), 15.0]);
+        db.run(insertUser, ['aiden', 'chef2', 'chef', hashPin('3123'), 18.0]);
         db.run(insertUser, ['Atif', 'chef', 'chef', hashPin('3333'), 18.0]);
 
-        console.log("✅ 4 Users Created with Hashed PINs: Admin (1111), Waiter (2222), Chef (3333)");
+        console.log("✅ 5 Users Created with Hashed PINs: Admin (1111), Waiter (2222), Waiter2 (2123), Chef (3333), Chef2 (3123)");
     } else {
         console.log("✅ Database ready (Users already exist).");
     }
@@ -157,21 +159,6 @@ db.serialize(() => {
 
     recipes.forEach(r => insertRecipe.run(r));
     insertRecipe.finalize();
-
-
-    const seedOrders = [
-        `INSERT INTO orders (order_status, created_at, total_amount, table_id, staff_id) VALUES ('Completed', datetime('now', '-2 hours'), 45.97, 1, 2)`,
-        `INSERT INTO orders (order_status, created_at, total_amount, table_id, staff_id) VALUES ('Completed', datetime('now', '-1 hours'), 32.50, 2, 2)`,
-        `INSERT INTO orders (order_status, created_at, total_amount, table_id, staff_id) VALUES ('Pending', datetime('now', '-30 minutes'), 18.99, 3, 2)`
-    ];
-    seedOrders.forEach(sql => db.run(sql));
-
-    const seedOrderItems = [
-        `INSERT INTO order_items (quantity, total_price, production_status, order_id, menu_item_id) VALUES (1, 12.99, 'Completed', 1, 1)`,
-        `INSERT INTO order_items (quantity, total_price, production_status, order_id, menu_item_id) VALUES (2, 33.98, 'Completed', 1, 2)`,
-        `INSERT INTO order_items (quantity, total_price, production_status, order_id, menu_item_id) VALUES (1, 18.99, 'In Progress', 3, 4)`
-    ];
-    seedOrderItems.forEach(sql => db.run(sql));
 
     console.log("✅ 20 Ingredients, 12 Menu Items, and 34 Recipes successfully seeded!");
     console.log("Press Ctrl+C to exit.");
