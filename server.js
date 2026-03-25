@@ -45,6 +45,7 @@ app.get('/api/pos/kitchen', posController.getKitchenData);
 app.put('/api/pos/kitchen/:id/done', posController.completeOrder);
 app.post('/api/pos/reservations', posController.createReservation);
 app.post('/api/pos/order/:id/void', posController.voidOrder);
+app.get('/api/pos/staff', posController.getStaffList);
 
 // Admin/Dashboard
 app.get('/api/admin/staff', dashboardController.getStaff);

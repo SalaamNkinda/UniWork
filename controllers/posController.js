@@ -136,3 +136,12 @@ exports.voidOrder = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+exports.getStaffList = async (req, res) => {
+    try {
+        const staff = await posModel.getStaff();
+        res.json({ success: true, staff });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
