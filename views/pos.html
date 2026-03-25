@@ -352,6 +352,19 @@
         font-weight: bold; 
     }
 
+    /* Order Notes Styling */
+    #order-notes {
+        width: 100%;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-family: inherit;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+
     /* Reusable Sidebar Buttons */
     .btn-full { 
         width: 100%; 
@@ -517,6 +530,8 @@
             <div id="cart-container" class="cart-wrapper">
                 <p class="empty-cart-text">No items yet</p>
             </div>
+            
+            <textarea id="order-notes" placeholder="Add notes for the kitchen (e.g. No onions, extra spicy)..."></textarea>
             
             <div class="ticket-total">
                 <span>Total</span>

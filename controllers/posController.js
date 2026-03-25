@@ -73,11 +73,11 @@ exports.verifyPin = async (req, res) => {
 
 exports.placeOrder = async (req, res) => {
     try {
-        const { tableId, staffId, cart, currentOrderId } = req.body;
+        const { tableId, staffId, cart, currentOrderId, notes } = req.body;
         
         if (!tableId || cart.length === 0) return res.status(400).json({ success: false, message: "Invalid order data" });
         
-        const orderId = await posModel.createOrUpdateOrderTransaction(tableId, staffId || 2, cart, currentOrderId); 
+        const orderId = await posModel.createOrUpdateOrderTransaction(tableId, staffId || 2, cart, currentOrderId, notes); 
         res.json({ success: true, orderId });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });

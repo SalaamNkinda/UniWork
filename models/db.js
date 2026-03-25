@@ -74,6 +74,7 @@ db.serialize(() => {
         total_amount REAL,
         table_id INTEGER,
         staff_id INTEGER,
+        notes TEXT,
         FOREIGN KEY(table_id) REFERENCES tables(table_id),
         FOREIGN KEY(staff_id) REFERENCES users(user_id)
     )`);

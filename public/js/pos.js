@@ -105,9 +105,12 @@ async function selectTable(id, name) {
             cart = data.order.items.map(item => ({...item, isSent: true})); 
             currentOrderId = data.order.order_id; 
             currentOrderStatus = data.order.order_status;
+            // Load existing notes if available
+            document.getElementById('order-notes').value = data.order.notes || '';
         } else {
             cart = []; 
             currentOrderStatus = null;
+            document.getElementById('order-notes').value = '';
         }
         renderCart();
     } catch(err) { 
@@ -248,6 +251,8 @@ async function sendToKitchen() {
     
     if (newItems.length === 0) return alert("No new items to send.");
 
+    const notes = document.getElementById('order-notes').value;
+
     try {
         const res = await fetch('/api/pos/order', {
             method: 'POST',
@@ -255,13 +260,15 @@ async function sendToKitchen() {
             body: JSON.stringify({ 
                 tableId: selectedTableId, 
                 currentOrderId: currentOrderId, // Pass the active order ID to the backend
-                cart: newItems 
+                cart: newItems,
+                notes: notes // Send notes to backend
             })
         });
         const data = await res.json();
         if (data.success) {
             cart = [];
             selectedTableId = null;
+            document.getElementById('order-notes').value = '';
             document.getElementById('pos-table-display').innerText = "Select a table from the Floor Plan first.";
             renderCart();
             goToTab('/pos.html', 'floor'); 
@@ -374,6 +381,7 @@ function renderKitchen(orders) {
                     </div>
                 </div>
                 <div class="kds-body">
+                    ${order.notes ? `<p style="background: #fff3cd; padding: 8px; border-radius: 4px; font-size: 0.95rem; margin-bottom: 15px; border: 1px solid #ffeeba;"><strong>Note:</strong> ${order.notes}</p>` : ''}
                     <p class="kds-items-title">Order Items</p>
                     ${itemsHtml}
                 </div>

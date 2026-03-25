@@ -73,7 +73,7 @@ function verifyAdminPassword(password) {
     });
 };
 
-function createOrUpdateOrderTransaction(tableId, staffId, cartItems, currentOrderId) {
+function createOrUpdateOrderTransaction(tableId, staffId, cartItems, currentOrderId, notes) {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
             db.run('BEGIN TRANSACTION');
@@ -143,8 +143,8 @@ function createOrUpdateOrderTransaction(tableId, staffId, cartItems, currentOrde
                 };
 
                 if (currentOrderId) {
-                    db.run(`UPDATE orders SET total_amount = total_amount + ?, order_status = 'Pending' WHERE order_id = ?`,
-                    [newItemsTotal, currentOrderId], function(err) {
+                    db.run(`UPDATE orders SET total_amount = total_amount + ?, order_status = 'Pending', notes = ? WHERE order_id = ?`,
+                    [newItemsTotal, notes, currentOrderId], function(err) {
                         if (err) { db.run('ROLLBACK'); return reject(err); }
                         
                         // Ensure table is marked occupied
@@ -152,8 +152,8 @@ function createOrUpdateOrderTransaction(tableId, staffId, cartItems, currentOrde
                         processItems(currentOrderId);
                     });
                 } else {
-                    db.run(`INSERT INTO orders (order_status, total_amount, table_id, staff_id) VALUES ('Pending', ?, ?, ?)`, 
-                    [newItemsTotal, tableId, staffId], function(err) {
+                    db.run(`INSERT INTO orders (order_status, total_amount, table_id, staff_id, notes) VALUES ('Pending', ?, ?, ?, ?)`, 
+                    [newItemsTotal, tableId, staffId, notes], function(err) {
                         if (err) { db.run('ROLLBACK'); return reject(err); }
                         const orderId = this.lastID;
 
@@ -169,7 +169,7 @@ function createOrUpdateOrderTransaction(tableId, staffId, cartItems, currentOrde
 function getKitchenOrders() {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT o.order_id, o.created_at, t.table_number, m.dish_name, oi.quantity, m.estimated_time 
+            SELECT o.order_id, o.created_at, o.notes, t.table_number, m.dish_name, oi.quantity, m.estimated_time 
             FROM orders o
             JOIN tables t ON o.table_id = t.table_id
             JOIN order_items oi ON o.order_id = oi.order_id
@@ -187,6 +187,7 @@ function getKitchenOrders() {
                         order_id: row.order_id,
                         table_number: row.table_number,
                         created_at: row.created_at,
+                        notes: row.notes,
                         max_time: row.estimated_time || 20,
                         items: []
                     };
