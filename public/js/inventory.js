@@ -25,6 +25,26 @@ export async function fetchIngredients() {
             
             result.data.forEach(item => {
                 const isLow = item.stock_level <= item.low_stock_threshold;
+                
+                // Calculate if expiring soon (within 7 days)
+                let expiryBadge = '<span style="color: var(--gray-500);">N/A</span>';
+                if (item.expiry_date) {
+                    const expDate = new Date(item.expiry_date);
+                    const today = new Date();
+                    const diffTime = expDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    const batchQtyInfo = item.oldest_batch_qty ? ` (${item.oldest_batch_qty}${item.unit})` : '';
+
+                    if (diffDays < 0) {
+                        expiryBadge = `<span class="badge badge-expired">EXPIRED${batchQtyInfo}</span>`;
+                    } else if (diffDays <= 7) {
+                        expiryBadge = `<span class="badge badge-warning">In ${diffDays} days${batchQtyInfo}</span>`;
+                    } else {
+                        expiryBadge = `<span>${expDate.toLocaleDateString()}${batchQtyInfo}</span>`;
+                    }
+                }
+
                 const row = `
                     <tr class="${isLow ? 'row-low-stock' : ''}">
                         <td>${item.ingredient_name}</td>
@@ -36,6 +56,7 @@ export async function fetchIngredients() {
                                 ${isLow ? 'LOW STOCK' : 'OK'}
                             </span>
                         </td>
+                        <td>${expiryBadge}</td>
                         <td style="text-align: center;">
                             <button onclick="openRestockModal(${item.ingredient_id}, '${item.ingredient_name.replace(/'/g, "\\'")}', '${item.unit}')" class="btn" style="background-color: var(--blue-100); color: var(--blue-700); padding: 0.25rem 0.5rem; margin-right: 0.5rem; border-radius: 4px;">
                                 <i class="fas fa-plus" style="margin-right: 0.3rem;"></i> Add
@@ -65,7 +86,8 @@ export async function handleAddIngredient(event) {
         unit: document.getElementById('new_unit').value,
         cost_per_unit: parseFloat(document.getElementById('new_cost').value),
         low_stock_threshold: parseFloat(document.getElementById('new_threshold').value),
-        supplier: document.getElementById('new_supplier').value
+        supplier: document.getElementById('new_supplier').value,
+        expiry_date: document.getElementById('new_expiry').value 
     };
 
     try {
@@ -265,12 +287,13 @@ export async function handleRestock(event) {
     event.preventDefault();
     const id = document.getElementById('restock_id').value;
     const qty = document.getElementById('restock_qty').value;
+    const expiryDate = document.getElementById('restock_expiry').value;
 
     try {
         const res = await fetch(`/api/inventory/ingredients/${id}/restock`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quantity: qty })
+            body: JSON.stringify({ quantity: qty, expiry_date: expiryDate })
         });
         const data = await res.json();
         

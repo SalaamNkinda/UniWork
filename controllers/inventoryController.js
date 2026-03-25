@@ -38,6 +38,7 @@ const addNewIngredient = async (req, res) => {
     cost_per_unit,
     low_stock_threshold,
     supplier,
+    expiry_date,
   } = req.body;
 
   // --- Validation ---
@@ -56,6 +57,7 @@ const addNewIngredient = async (req, res) => {
       cost_per_unit: parseFloat(cost_per_unit),
       low_stock_threshold: parseFloat(low_stock_threshold),
       supplier: supplier || null,
+      expiry_date: expiry_date || null,
     });
 
     return res.status(201).json({
@@ -305,14 +307,14 @@ const recordWastage = async (req, res) => {
 
 const restockItem = async (req, res) => {
     const ingredientId = parseInt(req.params.id, 10);
-    const { quantity } = req.body;
+    const { quantity, expiry_date } = req.body;
 
     if (isNaN(ingredientId) || quantity === undefined || parseFloat(quantity) <= 0) {
         return res.status(400).json({ success: false, message: 'Valid ID and quantity > 0 are required.' });
     }
 
     try {
-        const result = await addStock(ingredientId, parseFloat(quantity));
+        const result = await addStock(ingredientId, parseFloat(quantity), expiry_date || null);
         return res.status(200).json({ success: true, message: result.message });
     } catch (error) {
         if (error.message.includes('not found')) {
