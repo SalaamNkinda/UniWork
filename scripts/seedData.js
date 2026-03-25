@@ -40,34 +40,58 @@ db.get("SELECT count(*) as count FROM tables", (err, row) => {
 });
 
 db.serialize(() => {
+    const getOffsetDate = (days) => {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+    };
     // 1. Seed Ingredients
-    const insertIngredient = db.prepare(`INSERT INTO ingredients (ingredient_name, stock_level, unit, cost_per_unit, low_stock_threshold, stock_level_status, supplier) VALUES (?, ?, ?, ?, ?, ?, ?)`);
-    
     const ingredients = [
-        ['Burger Bun', 500, 'pcs', 0.50, 50, 'OK', 'Bakery Co'],          // 1
-        ['Beef Patty', 300, 'pcs', 2.00, 30, 'OK', 'Meat Palace'],        // 2
-        ['Chicken Breast', 200, 'pcs', 1.50, 20, 'OK', 'Meat Palace'],    // 3
-        ['Cheddar Cheese', 1000, 'pcs', 0.30, 100, 'OK', 'Dairy Farms'],  // 4
-        ['Lettuce', 10000, 'g', 0.01, 1000, 'OK', 'Fresh Veg'],           // 5
-        ['Tomato', 8000, 'g', 0.02, 500, 'OK', 'Fresh Veg'],              // 6
-        ['Potatoes', 20000, 'g', 0.005, 2000, 'OK', 'Farm Corp'],         // 7
-        ['Pizza Dough', 100, 'pcs', 1.00, 20, 'OK', 'Bakery Co'],         // 8
-        ['Mozzarella', 5000, 'g', 0.05, 500, 'OK', 'Dairy Farms'],        // 9
-        ['Pepperoni', 3000, 'g', 0.08, 300, 'OK', 'Meat Palace'],         // 10
-        ['Spaghetti', 10000, 'g', 0.01, 1000, 'OK', 'Pasta Co'],          // 11
-        ['Tomato Sauce', 10000, 'ml', 0.02, 1000, 'OK', 'Sauce Inc'],     // 12
-        ['Cola Syrup', 10000, 'ml', 0.01, 1000, 'OK', 'Bev Inc'],         // 13
-        ['Lemonade Syrup', 8000, 'ml', 0.015, 800, 'OK', 'Bev Inc'],      // 14
-        ['Sparkling Water', 20000, 'ml', 0.002, 2000, 'OK', 'Bev Inc'],   // 15
-        ['Vanilla Ice Cream', 10000, 'g', 0.04, 1000, 'OK', 'Dairy Farms'],// 16
-        ['Chocolate Syrup', 5000, 'ml', 0.03, 500, 'OK', 'Sweet Treats'], // 17
-        ['Brownie Square', 100, 'pcs', 1.00, 20, 'OK', 'Bakery Co'],      // 18
-        ['Cheesecake Slice', 50, 'pcs', 1.50, 10, 'OK', 'Bakery Co'],     // 19
-        ['Coffee Beans', 5000, 'g', 0.05, 500, 'OK', 'Roast Inc']         // 20
+        ['Burger Bun', 500, 'pcs', 0.50, 50, 'OK', 'Bakery Co', getOffsetDate(3)],          
+        ['Beef Patty', 300, 'pcs', 2.00, 30, 'OK', 'Meat Palace', getOffsetDate(5)],        
+        ['Chicken Breast', 200, 'pcs', 1.50, 20, 'OK', 'Meat Palace', getOffsetDate(4)],    
+        ['Cheddar Cheese', 1000, 'pcs', 0.30, 100, 'OK', 'Dairy Farms', getOffsetDate(14)], 
+        ['Lettuce', 10000, 'g', 0.01, 1000, 'OK', 'Fresh Veg', getOffsetDate(-1)],          
+        ['Tomato', 8000, 'g', 0.02, 500, 'OK', 'Fresh Veg', getOffsetDate(2)],              
+        ['Potatoes', 20000, 'g', 0.005, 2000, 'OK', 'Farm Corp', getOffsetDate(30)],        
+        ['Pizza Dough', 100, 'pcs', 1.00, 20, 'OK', 'Bakery Co', getOffsetDate(4)],         
+        ['Mozzarella', 5000, 'g', 0.05, 500, 'OK', 'Dairy Farms', getOffsetDate(20)],       
+        ['Pepperoni', 3000, 'g', 0.08, 300, 'OK', 'Meat Palace', getOffsetDate(45)],        
+        ['Spaghetti', 10000, 'g', 0.01, 1000, 'OK', 'Pasta Co', getOffsetDate(365)],        
+        ['Tomato Sauce', 10000, 'ml', 0.02, 1000, 'OK', 'Sauce Inc', getOffsetDate(180)],   
+        ['Cola Syrup', 10000, 'ml', 0.01, 1000, 'OK', 'Bev Inc', getOffsetDate(365)],       
+        ['Lemonade Syrup', 8000, 'ml', 0.015, 800, 'OK', 'Bev Inc', getOffsetDate(180)],    
+        ['Sparkling Water', 20000, 'ml', 0.002, 2000, 'OK', 'Bev Inc', null],               
+        ['Vanilla Ice Cream', 10000, 'g', 0.04, 1000, 'OK', 'Dairy Farms', getOffsetDate(60)],
+        ['Chocolate Syrup', 5000, 'ml', 0.03, 500, 'OK', 'Sweet Treats', getOffsetDate(365)], 
+        ['Brownie Square', 100, 'pcs', 1.00, 20, 'OK', 'Bakery Co', getOffsetDate(-3)],     
+        ['Cheesecake Slice', 50, 'pcs', 1.50, 10, 'OK', 'Bakery Co', getOffsetDate(1)],     
+        ['Coffee Beans', 5000, 'g', 0.05, 500, 'OK', 'Roast Inc', getOffsetDate(90)]        
     ];
 
-    ingredients.forEach(i => insertIngredient.run(i));
-    insertIngredient.finalize();
+    db.serialize(() => {
+        const insertIngredient = db.prepare(`INSERT INTO ingredients (ingredient_name, stock_level, unit, cost_per_unit, low_stock_threshold, stock_level_status, supplier) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+        const insertBatch = db.prepare(`INSERT INTO ingredient_batches (ingredient_id, quantity, expiry_date) VALUES (?, ?, ?)`);
+
+        ingredients.forEach((item) => {
+            insertIngredient.run([item[0], item[1], item[2], item[3], item[4], item[5], item[6]], function(err) {
+                if (err) return console.error("Error inserting ingredient:", err.message);
+                
+                const newIngredientId = this.lastID;
+                const quantity = item[1];
+                const expiryDate = item[7];
+
+                insertBatch.run([newIngredientId, quantity, expiryDate], function(err) {
+                    if (err) console.error("Error inserting batch:", err.message);
+                });
+            });
+        });
+
+        setTimeout(() => {
+            insertIngredient.finalize();
+            insertBatch.finalize();
+        }, 1000);
+    });
 
     // 2. Seed Menu Items
     const insertMenu = db.prepare(`INSERT INTO menu_items (dish_name, category, selling_price, production_cost, estimated_time) VALUES (?, ?, ?, ?, ?)`);

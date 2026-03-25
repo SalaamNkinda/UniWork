@@ -4,18 +4,25 @@ function getAllIngredients() {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT
-        ingredient_id,
-        ingredient_name,
-        stock_level,
-        unit,
-        cost_per_unit,
-        low_stock_threshold,
-        stock_level_status,
-        supplier
-      FROM ingredients
+        i.ingredient_id,
+        i.ingredient_name,
+        i.stock_level,
+        i.unit,
+        i.cost_per_unit,
+        i.low_stock_threshold,
+        i.stock_level_status,
+        i.supplier,
+        (SELECT MIN(expiry_date) FROM ingredient_batches b WHERE b.ingredient_id = i.ingredient_id AND b.quantity > 0) as expiry_date,
+        (SELECT quantity FROM ingredient_batches b WHERE b.ingredient_id = i.ingredient_id AND b.quantity > 0 ORDER BY expiry_date ASC LIMIT 1) as oldest_batch_qty
+      FROM ingredients i
       ORDER BY 
-        CASE WHEN stock_level <= low_stock_threshold THEN 0 ELSE 1 END ASC,
-        ingredient_name ASC
+        CASE WHEN (SELECT MIN(expiry_date) FROM ingredient_batches b WHERE b.ingredient_id = i.ingredient_id AND b.quantity > 0) < date('now') THEN 0 ELSE 1 END ASC,
+        
+        IFNULL((SELECT MIN(expiry_date) FROM ingredient_batches b WHERE b.ingredient_id = i.ingredient_id AND b.quantity > 0), '9999-12-31') ASC,
+        
+        CASE WHEN i.stock_level <= i.low_stock_threshold THEN 0 ELSE 1 END ASC,
+        
+        i.ingredient_name ASC
     `;
     db.all(sql, [], (err, rows) => {
       if (err) return reject(new Error(`getAllIngredients failed: ${err.message}`));
@@ -240,92 +247,77 @@ function calculateProductionCost(menuItemId) {
 function logWastage(ingredientId, quantity, reason) {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
-      db.run('BEGIN TRANSACTION', (err) => {
-        if (err) return reject(new Error(`Wastage transaction BEGIN failed: ${err.message}`));
-      });
+      db.run('BEGIN TRANSACTION');
 
-      // Step 1: Insert into wastage_log (logged_at has DEFAULT CURRENT_TIMESTAMP in db.js)
-      const insertWastageSql = `
-        INSERT INTO wastage_log (ingredient_id, quantity_wasted, reason)
-        VALUES (?, ?, ?)
-      `;
-      db.run(insertWastageSql, [ingredientId, quantity, reason], function (err) {
-        if (err) {
-          db.run('ROLLBACK');
-          return reject(new Error(`logWastage (insert log) failed: ${err.message}`));
-        }
+      // Step 1: Log it
+      db.run(`INSERT INTO wastage_log (ingredient_id, quantity_wasted, reason) VALUES (?, ?, ?)`, [ingredientId, quantity, reason], function (err) {
+        if (err) { db.run('ROLLBACK'); return reject(err); }
 
-        const newLogId = this.lastID;
-
-        // Step 2: Decrement stock_level (floor at 0 to avoid negative stock)
+        // Step 2: Update total stock
         const updateStockSql = `
           UPDATE ingredients
-          SET
-            stock_level        = MAX(0, stock_level - ?),
-            stock_level_status = CASE
-                                   WHEN MAX(0, stock_level - ?) <= low_stock_threshold
-                                   THEN 'LOW'
-                                   ELSE 'OK'
-                                 END
+          SET stock_level = MAX(0, stock_level - ?),
+              stock_level_status = CASE WHEN MAX(0, stock_level - ?) <= low_stock_threshold THEN 'LOW' ELSE 'OK' END
           WHERE ingredient_id = ?
         `;
         db.run(updateStockSql, [quantity, quantity, ingredientId], function (err) {
-          if (err) {
-            db.run('ROLLBACK');
-            return reject(new Error(`logWastage (update stock) failed: ${err.message}`));
-          }
-          if (this.changes === 0) {
-            db.run('ROLLBACK');
-            return reject(new Error(`Ingredient with ID ${ingredientId} not found.`));
-          }
+          if (err) { db.run('ROLLBACK'); return reject(err); }
 
-          // Step 3: Fetch the new stock level to return to caller
-          db.get(
-            `SELECT stock_level, stock_level_status FROM ingredients WHERE ingredient_id = ?`,
-            [ingredientId],
-            (err, row) => {
-              if (err) {
-                db.run('ROLLBACK');
-                return reject(new Error(`logWastage (fetch updated stock) failed: ${err.message}`));
-              }
+          // Step 3: FIFO Batch Deduction (The Magic)
+          // Grab all batches that have stock, ordered by oldest expiry date first
+          db.all(`SELECT batch_id, quantity FROM ingredient_batches WHERE ingredient_id = ? AND quantity > 0 ORDER BY expiry_date ASC`, [ingredientId], (err, batches) => {
+            if (err) { db.run('ROLLBACK'); return reject(err); }
 
-              db.run('COMMIT', (err) => {
-                if (err) {
-                  db.run('ROLLBACK');
-                  return reject(new Error(`Wastage transaction COMMIT failed: ${err.message}`));
+            let remainingToDeduct = quantity;
+            const updateBatchStmt = db.prepare(`UPDATE ingredient_batches SET quantity = ? WHERE batch_id = ?`);
+
+            for (let i = 0; i < batches.length; i++) {
+                if (remainingToDeduct <= 0) break; 
+
+                const batch = batches[i];
+                if (batch.quantity <= remainingToDeduct) {
+                    remainingToDeduct -= batch.quantity;
+                    updateBatchStmt.run([0, batch.batch_id]);
+                } else {
+                    // This batch has enough, just deduct what we need
+                    updateBatchStmt.run([batch.quantity - remainingToDeduct, batch.batch_id]);
+                    remainingToDeduct = 0;
                 }
-                resolve({
-                  log_id: newLogId,
-                  ingredient_id: ingredientId,
-                  new_stock_level: row.stock_level,
-                  stock_level_status: row.stock_level_status,
-                  message: 'Wastage logged and stock updated successfully.',
-                });
-              });
             }
-          );
+
+            updateBatchStmt.finalize((err) => {
+                if (err) { db.run('ROLLBACK'); return reject(err); }
+                db.run('COMMIT');
+                resolve({ message: 'Wastage logged and FIFO batches updated.' });
+            });
+          });
         });
       });
     });
   });
 }
 
-function addStock(ingredientId, addedQuantity) {
+function addStock(ingredientId, addedQuantity, newExpiryDate) {
     return new Promise((resolve, reject) => {
-        const sql = `
-            UPDATE ingredients
-            SET
-                stock_level = stock_level + ?,
-                stock_level_status = CASE 
-                                       WHEN (stock_level + ?) <= low_stock_threshold THEN 'LOW' 
-                                       ELSE 'OK' 
-                                     END
-            WHERE ingredient_id = ?
-        `;
-        db.run(sql, [addedQuantity, addedQuantity, ingredientId], function (err) {
-            if (err) return reject(new Error(`addStock failed: ${err.message}`));
-            if (this.changes === 0) return reject(new Error(`Ingredient with ID ${ingredientId} not found.`));
-            resolve({ changes: this.changes, message: 'Stock added successfully.' });
+        db.serialize(() => {
+            db.run('BEGIN TRANSACTION');
+
+            db.run(`INSERT INTO ingredient_batches (ingredient_id, quantity, expiry_date) VALUES (?, ?, ?)`, 
+                [ingredientId, addedQuantity, newExpiryDate || null], function(err) {
+                if (err) { db.run('ROLLBACK'); return reject(err); }
+
+                const sql = `
+                    UPDATE ingredients
+                    SET stock_level = stock_level + ?,
+                        stock_level_status = CASE WHEN (stock_level + ?) <= low_stock_threshold THEN 'LOW' ELSE 'OK' END
+                    WHERE ingredient_id = ?
+                `;
+                db.run(sql, [addedQuantity, addedQuantity, ingredientId], function (err) {
+                    if (err) { db.run('ROLLBACK'); return reject(err); }
+                    db.run('COMMIT');
+                    resolve({ changes: this.changes, message: 'New stock batch added successfully.' });
+                });
+            });
         });
     });
 }

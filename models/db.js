@@ -38,6 +38,15 @@ db.serialize(() => {
         stock_level_status TEXT,
         supplier TEXT
     )`);
+    
+    // INGREDIENT_BATCHES
+    db.run(`CREATE TABLE IF NOT EXISTS ingredient_batches (
+        batch_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ingredient_id INTEGER,
+        quantity REAL,
+        expiry_date DATE,
+        FOREIGN KEY(ingredient_id) REFERENCES ingredients(ingredient_id) ON DELETE CASCADE
+    )`);
 
     //MENU_ITEMS
     db.run(`CREATE TABLE IF NOT EXISTS menu_items (
