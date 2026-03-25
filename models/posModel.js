@@ -338,7 +338,15 @@ function voidActiveOrder(orderId, tableId) {
     });
 }
 
+function getStaff() {
+    return new Promise((resolve, reject) => {
+        db.all("SELECT user_id, full_name, role FROM users WHERE role IN ('waiter', 'admin')", [], (err, rows) => {
+            if (err) return reject(err);
+            resolve(rows);
+        });
+    });
+}
 
 module.exports = {
-    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrUpdateOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction, voidActiveOrder
+    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrUpdateOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction, voidActiveOrder, getStaff
 };

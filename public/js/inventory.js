@@ -1,5 +1,3 @@
-// /public/js/inventory.js
-
 let globalIngredients = [];
 
 // --- Navigation & UI Logic ---

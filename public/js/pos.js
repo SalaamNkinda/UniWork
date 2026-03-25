@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     fetchFloorData();
+    fetchStaff();
 });
 
 // --- Tabbing Logic ---
@@ -107,10 +108,14 @@ async function selectTable(id, name) {
             currentOrderStatus = data.order.order_status;
             // Load existing notes if available
             document.getElementById('order-notes').value = data.order.notes || '';
+            if (data.order.staff_id) {
+                document.getElementById('waiter-select').value = data.order.staff_id;
+            }
         } else {
             cart = []; 
             currentOrderStatus = null;
             document.getElementById('order-notes').value = '';
+            document.getElementById('waiter-select').value = "";
         }
         renderCart();
     } catch(err) { 
@@ -247,6 +252,8 @@ function renderCart() {
 async function sendToKitchen() {
     if (!selectedTableId) return alert("Please select a table from the Floor Plan first.");
     
+    const waiterId = document.getElementById('waiter-select').value;
+    if (!waiterId && !currentOrderId) return alert("Please assign a waiter before creating the order.");
     const newItems = cart.filter(i => !i.isSent);
     
     if (newItems.length === 0) return alert("No new items to send.");
@@ -261,7 +268,8 @@ async function sendToKitchen() {
                 tableId: selectedTableId, 
                 currentOrderId: currentOrderId, // Pass the active order ID to the backend
                 cart: newItems,
-                notes: notes // Send notes to backend
+                notes: notes, // Send notes to backend
+                staffId: waiterId || undefined // Only send if it's a new order without an assigned waiter
             })
         });
         const data = await res.json();
@@ -437,4 +445,17 @@ async function payOrder() {
     } catch(err) { 
         console.error(err); 
     }
+}
+
+async function fetchStaff() {
+    try {
+        const res = await fetch('/api/pos/staff');
+        const data = await res.json();
+        if(data.success) {
+            const select = document.getElementById('waiter-select');
+            data.staff.forEach(user => {
+                select.innerHTML += `<option value="${user.user_id}">${user.full_name} (${user.role})</option>`;
+            });
+        }
+    } catch(err) { console.error(err); }
 }
