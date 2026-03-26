@@ -62,10 +62,10 @@ function renderTables(tables) {
     tables.forEach((table) => {
         let statusClass = 'status-empty';
         if (table.table_status === 'Occupied') statusClass = 'status-occupied';
-        if (table.table_status === 'Reserved') statusClass = 'status-reserved'; // For 15-min logic
+        if (table.table_status === 'Reserved') statusClass = 'status-reserved';
 
         container.innerHTML += `
-            <div class="table-shape square ${statusClass}" onclick="selectTable(${table.table_id}, '${table.table_number}')">
+            <div class="table-shape square ${statusClass}" onclick="selectTable(${table.table_id}, '${table.table_number}', '${table.table_status}', ${table.active_reservation_id || null})">
                 ${table.table_number}
             </div>
         `;
@@ -76,24 +76,51 @@ function renderReservations(resList) {
     const container = document.getElementById('reservations-container');
     container.innerHTML = '';
     resList.forEach(r => {
-        // Safe local parsing 
         const time = new Date(r.reservation_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const resId = r.reservation_id || r.id;
+
         container.innerHTML += `
-            <div style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+            <div onclick="cancelReservation(${resId}, '${r.customer_name}', '${time}')" style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='white'">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                     <strong>${r.customer_name}</strong>
-                    <span style="color: var(--navy);">${r.table_number}</span>
+                    <span style="color: var(--navy); font-weight: bold;">${r.table_number}</span>
                 </div>
                 <div style="color: var(--muted-foreground); font-size: 0.9rem;">
                     <p style="margin: 0 0 0.25rem 0;">${time}</p>
                     <p style="margin: 0;">${r.guests} guests</p>
+                    <p style="margin: 0; color: #ef4444; font-size: 0.8rem; margin-top: 8px; font-weight: bold;">Click to cancel</p>
                 </div>
             </div>
         `;
     });
 }
 
-async function selectTable(id, name) {
+async function cancelReservation(id, name, time) {
+    const policyMsg = `Cancellation Policy:\nCancellations within 2 hours of the booking time are subject to a fee.\n\nCancel reservation for ${name} at ${time}?`;
+    
+    if (!confirm(policyMsg)) return;
+
+    try {
+        const res = await fetch(`/api/pos/reservations/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            fetchFloorData();
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch(err) { console.error(err); }
+}
+
+async function selectTable(id, name, status, reservationId) {
+    if (status === 'Reserved') {
+        const seatRes = confirm(`Table ${name} is Reserved.\n\nAre you seating the customer for this reservation?\n(Click OK to seat them, click Cancel to block walk-ins)`);
+        if (!seatRes) return;
+
+        if (reservationId) {
+            await fetch(`/api/pos/reservations/${reservationId}`, { method: 'DELETE' });
+        }
+    }
+
     selectedTableId = id;
     currentOrderId = null; 
     document.getElementById('pos-table-display').innerText = `Ordering for: ${name}`;

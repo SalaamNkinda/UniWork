@@ -347,6 +347,15 @@ function getStaff() {
     });
 }
 
+function deleteReservation(id) {
+    return new Promise((resolve, reject) => {
+        db.run(`DELETE FROM reservations WHERE reservation_id = ?`, [id], function(err) {
+            if (err) return reject(err);
+            resolve(this.changes);
+        });
+    });
+}
+
 module.exports = {
-    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrUpdateOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction, voidActiveOrder, getStaff
+    getTables, getReservations, checkTableAvailability, createReservation, getMenuItems, verifyAdminPassword, createOrUpdateOrderTransaction, getKitchenOrders, markOrderCompleted, getActiveTableOrder, processPaymentTransaction, voidActiveOrder, getStaff, deleteReservation
 };

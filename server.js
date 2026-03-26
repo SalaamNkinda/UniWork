@@ -46,6 +46,7 @@ app.put('/api/pos/kitchen/:id/done', posController.completeOrder);
 app.post('/api/pos/reservations', posController.createReservation);
 app.post('/api/pos/order/:id/void', posController.voidOrder);
 app.get('/api/pos/staff', posController.getStaffList);
+app.delete('/api/pos/reservations/:id', posController.cancelReservation);
 
 // Admin/Dashboard
 app.get('/api/admin/staff', dashboardController.getStaff);

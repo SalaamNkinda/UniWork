@@ -16,13 +16,15 @@ exports.getFloorData = async (req, res) => {
 
         if (selectedDate === localISOTime) {
             reservations.forEach(r => {
-                const resTime = new Date(r.reservation_time); 
+                const resTime = new Date(r.reservation_time + 'Z');
                 const diffMins = (resTime.getTime() - dubaiNow.getTime()) / 60000;
                 
                 // If reservation is happening in next 15 mins, or up to 2 hours into the reservation
                 if (diffMins <= 15 && diffMins >= -120) {
                     if (tablesMap[r.table_id] && tablesMap[r.table_id].table_status === 'Empty') {
                         tablesMap[r.table_id].table_status = 'Reserved'; 
+                        
+                        tablesMap[r.table_id].active_reservation_id = r.reservation_id || r.id; 
                     }
                 }
             });
@@ -44,6 +46,15 @@ exports.createReservation = async (req, res) => {
         }
 
         await posModel.createReservation(req.body);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+exports.cancelReservation = async (req, res) => {
+    try {
+        await posModel.deleteReservation(req.params.id);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
