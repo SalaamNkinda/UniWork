@@ -508,8 +508,8 @@
         </div>
     </div>
 
-    <div id="floor-section" class="layout-split">
-        <div class="main-area">
+<section id="floor-section" class="layout-split">
+        <main class="main-area">
             <h1>Live Floor Plan</h1>
             <p class="subtitle">Real-time table status and management</p>
             
@@ -520,9 +520,9 @@
                 <div class="legend-item" style="color: white;"><div class="legend-box status-reserved"></div> Reserved </div>
                 <div class="legend-item" style="color: white;"><div class="legend-box status-occupied"></div> Occupied/Eating</div>
             </div>
-        </div>
+        </main>
         
-        <div class="sidebar">
+        <aside class="sidebar">
             <h2>Reservations</h2>
             <button class="btn-full btn-new-booking" onclick="openBookingModal()">+ New Booking</button>
             
@@ -532,11 +532,11 @@
             
             <h3 class="reservations-heading">Selected Date Reservations</h3>
             <div id="reservations-container"></div>
-        </div>
-    </div>
+        </aside>
+    </section>
 
-    <div id="pos-section" class="layout-split hidden">
-        <div class="main-area">
+    <section id="pos-section" class="layout-split hidden">
+        <main class="main-area">
             <h1>Point of Sale</h1>
             <p class="subtitle" id="pos-table-display">Select a table from the Floor Plan first.</p>
             
@@ -547,9 +547,9 @@
             </div>
             
             <div class="menu-grid" id="menu-container"></div>
-        </div>
+        </main>
         
-        <div class="sidebar">
+        <aside class="sidebar">
             <h2>Order Ticket</h2>
             <select id="waiter-select">
                 <option value="">Assign Waiter</option>
@@ -568,16 +568,16 @@
             <button class="btn-full btn-send" onclick="sendToKitchen()">Send to Kitchen</button>
             <button class="btn-full btn-pay" onclick="payOrder()">Mark as paid</button>
             <button class="btn-full btn-void" onclick="voidOrder()">Void Order (Admin PIN)</button>
-        </div>
-    </div>
+        </aside>
+    </section>
 
-    <div id="kitchen-section" class="hidden">
-        <div class="kds-page-header">
+    <section id="kitchen-section" class="hidden">
+        <header class="kds-page-header">
             <h1>Kitchen Display System</h1>
             <p class="subtitle" id="kds-count">Active Orders: 0</p>
-        </div>
-        <div class="kitchen-grid" id="kds-container"></div>
-    </div>
+        </header>
+        <main class="kitchen-grid" id="kds-container"></main>
+    </section>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="/js/pos.js"></script>
