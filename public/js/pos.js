@@ -65,9 +65,11 @@ function renderTables(tables) {
         if (table.table_status === 'Reserved') statusClass = 'status-reserved';
 
         container.innerHTML += `
-            <div class="table-shape square ${statusClass}" onclick="selectTable(${table.table_id}, '${table.table_number}', '${table.table_status}', ${table.active_reservation_id || null})">
+            <button class="table-shape square ${statusClass}" 
+                 aria-label="Table ${table.table_number}, ${table.table_status}"
+                 onclick="selectTable(${table.table_id}, '${table.table_number}', '${table.table_status}', ${table.active_reservation_id || null})">
                 ${table.table_number}
-            </div>
+            </button>
         `;
     });
 }
