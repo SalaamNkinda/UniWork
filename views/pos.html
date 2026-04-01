@@ -130,7 +130,8 @@
        ========================================= */
     .floor-grid { 
         display: grid; 
-        grid-template-columns: repeat(4, 1fr); 
+        /* Replaced repeat(4, 1fr) with auto-fit */
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
         gap: 2rem; 
         padding: 3rem; 
         background-color: var(--card); 
@@ -287,7 +288,8 @@
     
     .menu-grid { 
         display: grid; 
-        grid-template-columns: repeat(3, 1fr); 
+        /* Replaced repeat(3, 1fr) with auto-fit */
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
         gap: 1.5rem; 
     }
 
@@ -489,6 +491,42 @@
         outline: none;
         border-color: #3b82f6;
     }
+
+/* =========================================
+       10. RESPONSIVE DESIGN (MOBILE VIEW)
+       ========================================= */
+    @media (max-width: 800px) {
+        /* 1. Stack the main layout */
+        .layout-split { 
+            grid-template-columns: 1fr; 
+            height: auto; 
+        }
+
+        .sidebar { 
+            border-left: none; 
+            border-top: 1px solid var(--border); 
+            height: auto; 
+        }
+
+        /* 2. Fix the horizontal scrolling grids */
+        .menu-grid {
+            grid-template-columns: 1fr; /* Stack menu items in a single column */
+        }
+
+        .floor-grid {
+            grid-template-columns: repeat(2, 1fr); /* Shrink tables to 2 columns */
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        .kitchen-grid {
+            grid-template-columns: 1fr; /* Stack kitchen tickets */
+        }
+
+        .category-pills {
+            flex-wrap: wrap; /* Let the filter buttons wrap if they run out of room */
+        }
+    }
 </style>
 </head>
 <body>
@@ -508,7 +546,7 @@
         </div>
     </div>
 
-<section id="floor-section" class="layout-split">
+    <section id="floor-section" class="layout-split">
         <main class="main-area">
             <h1>Live Floor Plan</h1>
             <p class="subtitle">Real-time table status and management</p>

@@ -37,8 +37,14 @@ npm install
 
 To start the backend, run:
 
+1. Seed the data
 ```bash
-npm start
+npm run seed
+
+```
+2. Run the server
+```bash
+npm run start
 
 ```
 
